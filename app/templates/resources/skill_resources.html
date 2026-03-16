@@ -49,8 +49,8 @@
         </button>
       </div>
       <div class="d-flex flex-wrap gap-1 my-2">
-        <span class="badge format-badge {{ res.format|lower }}">{{ res.format|capitalize }}</span>
-        <span class="badge cost-badge {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %}">{{ res.cost_tier|capitalize }}</span>
+        <span class="badge format-badge text-dark {{ res.format|lower }}">{{ res.format|capitalize }}</span>
+        <span class="badge cost-badge text-dark {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %}">{{ res.cost_tier|capitalize }}</span>
         <span class="badge bg-light text-muted">~{{ res.estimated_hours }}h</span>
       </div>
       <div class="d-flex align-items-center gap-1 mb-2"><i class="bi bi-star-fill star-filled"></i><span class="small fw-semibold">{{ '%.1f'|format(res.quality_rating or 0) }}</span></div>

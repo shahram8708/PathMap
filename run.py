@@ -64,10 +64,10 @@ def create_admin():
         subscription_tier='admin_granted',
         onboarding_complete=True
     )
-    admin.set_password('Admin@PathMap2024!')
+    admin.set_password('Admin@PathMap2026!')
     db.session.add(admin)
     db.session.commit()
-    print('Admin user created: admin@pathmap.in / Admin@PathMap2024!')
+    print('Admin user created: admin@pathmap.in / Admin@PathMap2026!')
 
 
 if __name__ == '__main__':

@@ -27,11 +27,6 @@ htmlcov/
 logs/
 *.log
 
-# Flask / local state
-instance/
-*.db
-*.sqlite3
-
 # IDE / editor
 .vscode/
 .idea/

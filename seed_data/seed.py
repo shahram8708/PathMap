@@ -64,7 +64,7 @@ def ensure_admin_user(summary: dict) -> User:
             subscription_tier='admin_granted',
             onboarding_complete=True
         )
-        admin.set_password('Admin@PathMap2024!')
+        admin.set_password('Admin@PathMap2026!')
         db.session.add(admin)
         summary['users_created'] += 1
         db.session.commit()
@@ -506,7 +506,7 @@ def seed_providers(roles_map: dict, summary: dict) -> None:
                 is_premium=True,
                 subscription_tier='provider_granted'
             )
-            user.set_password('Provider@PathMap2024!')
+            user.set_password('Provider@PathMap2026!')
             db.session.add(user)
             summary['users_created'] += 1
             db.session.flush()

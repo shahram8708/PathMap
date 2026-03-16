@@ -11,7 +11,7 @@
   <a class="cta-chip" href="{{ url_for('analysis.analysis_hub') }}"><i class="bi bi-diagram-3"></i> Skill Analysis</a>
   <a class="cta-chip" href="{{ url_for('planner.planner_hub') }}"><i class="bi bi-compass"></i> Planner</a>
   <a class="cta-chip" href="{{ url_for('progress.progress_dashboard') }}"><i class="bi bi-graph-up"></i> Progress</a>
-  <a class="cta-chip" href="{{ url_for('resources.my_bookmarks') }}"><i class="bi bi-bookmark"></i> Bookmarked Resources</a>
+  <a class="cta-chip" href="{{ url_for('resources.my_bookmarks') }}"><i class="bi bi-bookmark"></i> Bookmarked</a>
   {% if not current_user.is_premium %}
     <a class="cta-chip premium" href="{{ url_for('main.pricing') }}"><i class="bi bi-lock-fill"></i> Premium ₹1,499/mo</a>
   {% endif %}
