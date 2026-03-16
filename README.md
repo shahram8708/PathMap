@@ -1265,7 +1265,7 @@ PathMap welcomes contributions. Here's how to get started.
 Fork the repository on GitHub and clone your fork:
 
 ```bash
-git clone https://github.com/your-username/PathMap.git
+git clone https://github.com/shahram8708/PathMap.git
 cd PathMap
 ```
 
