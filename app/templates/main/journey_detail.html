@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Journey Detail{% endblock %}
+{% block content %}
+<section class="bg-light py-5">
+  <div class="container">
+    <div class="row mb-4 align-items-center">
+      <div class="col-md-8">
+        <p class="text-uppercase text-muted small mb-2">Career Journey</p>
+        <h1 class="fw-bold">Journey #{{ journey.id }}</h1>
+        <p class="text-muted mb-0">Structured data from a real pivot. More detail is added as the record matures.</p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a class="btn btn-pathmap-outline me-2" href="{{ url_for('journeys.explorer') }}">Back to Explorer</a>
+        <a class="btn btn-pathmap-primary" href="{{ url_for('auth.signup') }}">Start Your Plan</a>
+      </div>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="pathmap-card p-4 mb-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="from-to-badge">From {{ journey.origin_role_id or 'current role' }} → To {{ journey.target_role_id or 'target role' }}</div>
+            {% if journey.timeline_months %}
+            <span class="timeline-badge">{{ journey.timeline_months }} months</span>
+            {% endif %}
+            {% if journey.outcome_status %}
+            <span class="badge bg-secondary text-white">{{ journey.outcome_status }}</span>
+            {% endif %}
+          </div>
+          <p class="mb-3">{{ journey.summary or 'This journey summary will be expanded with milestones and resources.' }}</p>
+          <div class="d-flex flex-wrap gap-3">
+            <div>
+              <span class="text-muted d-block small">Income change</span>
+              <strong>{{ journey.income_change_pct is not none and journey.income_change_pct ~ '% at 12 months' or 'Not reported' }}</strong>
+            </div>
+            <div>
+              <span class="text-muted d-block small">Submitted</span>
+              <strong>{{ journey.submitted_at.strftime('%b %d, %Y') if journey.submitted_at else 'Not provided' }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="pathmap-card p-4">
+          <h5 class="mb-3">What this means</h5>
+          <p class="mb-0">PathMap uses anonymized, structured journey data to surface realistic timelines, income shifts, and common blockers. As this record is enriched, it will include milestone-level details, resources used, and what did not work. Check back soon or submit your own journey to accelerate the dataset.</p>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="pathmap-card p-4 mb-4">
+          <h6 class="text-uppercase text-muted small">Snapshot</h6>
+          <ul class="list-unstyled mb-0">
+            <li class="d-flex justify-content-between py-2 border-bottom"><span>Timeline</span><strong>{{ journey.timeline_months or 'N/A' }} months</strong></li>
+            <li class="d-flex justify-content-between py-2 border-bottom"><span>Income change</span><strong>{{ journey.income_change_pct is not none and journey.income_change_pct ~ '%' or 'N/A' }}</strong></li>
+            <li class="d-flex justify-content-between py-2 border-bottom"><span>Outcome</span><strong>{{ journey.outcome_status or 'N/A' }}</strong></li>
+            <li class="d-flex justify-content-between py-2"><span>Published</span><strong>{{ 'Yes' if journey.is_published else 'Pending' }}</strong></li>
+          </ul>
+        </div>
+        <div class="pathmap-card p-4">
+          <h6 class="text-uppercase text-muted small">Take action</h6>
+          <p class="mb-3">Use PathMap to model your own pivot timeline and income scenarios with live benchmarks.</p>
+          <a class="btn btn-pathmap-primary w-100" href="{{ url_for('auth.signup') }}">Start Free Assessment</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

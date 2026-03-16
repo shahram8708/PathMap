@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Contact{% endblock %}
+{% block content %}
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <h1 class="fw-bold">Contact PathMap</h1>
+    <p class="text-muted mb-0">We respond within 1 business day.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="pathmap-card p-4">
+          <h5 class="fw-bold mb-3">Send us a message</h5>
+          <form method="POST" action="{{ url_for('main.contact_submit') }}">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+              {{ form.name.label(class='form-label') }}
+              {{ form.name(class='form-control', placeholder='Your full name') }}
+              {% for error in form.name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+              {{ form.email.label(class='form-label') }}
+              {{ form.email(class='form-control', placeholder='you@example.com') }}
+              {% for error in form.email.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+              {{ form.subject.label(class='form-label') }}
+              {{ form.subject(class='form-control', list='subject-options', placeholder='Select a subject') }}
+              <datalist id="subject-options">
+                <option value="General Inquiry"></option>
+                <option value="Technical Support"></option>
+                <option value="Billing & Subscriptions"></option>
+                <option value="Partnership / B2B"></option>
+                <option value="Press & Media"></option>
+                <option value="Other"></option>
+              </datalist>
+              {% for error in form.subject.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+              {{ form.message.label(class='form-label') }}
+              {{ form.message(class='form-control', rows='5', id='contact-message', placeholder='Share details so we can help quickly.') }}
+              <div class="d-flex justify-content-between">
+                <small id="message-counter" class="text-muted">0/2000 characters</small>
+                {% for error in form.message.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+            </div>
+            <div class="mt-4">
+              {{ form.submit(class='btn btn-pathmap-primary') }}
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="pathmap-card p-4 h-100">
+          <h5 class="fw-bold">Contact details</h5>
+          <p class="mb-2">Email: <a href="mailto:support@pathmap.in">support@pathmap.in</a></p>
+          <p class="mb-2">Response time: within 1 business day</p>
+          <p class="mb-3">Location: India — Remote-first team</p>
+          <div class="d-flex gap-3 mb-3">
+            <a class="footer-icon" href="https://www.linkedin.com" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+            <a class="footer-icon" href="https://twitter.com" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+            <a class="footer-icon" href="https://github.com" aria-label="GitHub"><i class="bi bi-github"></i></a>
+          </div>
+          <p class="text-muted mb-0">For teams or partnerships, mention your organization size and goals. For press, include your publication and deadline.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

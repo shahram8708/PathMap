@@ -1,0 +1,210 @@
+{% extends 'dashboard_base.html' %}
+
+{% block breadcrumb %}
+Dashboard / Settings
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="card shadow-sm p-3 mb-3">
+  <ul class="nav nav-tabs settings-tabs" id="settingsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if active_tab == 'profile' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-profile" type="button" role="tab">Profile</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if active_tab == 'password' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-password" type="button" role="tab">Password</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if active_tab == 'notifications' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-notifications" type="button" role="tab">Notifications</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if active_tab == 'subscription' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-subscription" type="button" role="tab">Subscription</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if active_tab == 'privacy' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-privacy" type="button" role="tab">Privacy & Data</button>
+    </li>
+  </ul>
+  <div class="tab-content pt-3">
+    <div class="tab-pane fade {% if active_tab == 'profile' %}show active{% endif %}" id="tab-profile" role="tabpanel">
+      <div class="settings-section-card p-4">
+        <h5>Profile Details</h5>
+        <form method="POST" action="{{ url_for('profile.update_profile') }}">
+          {{ update_form.hidden_tag() }}
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <label class="form-label">First Name</label>
+              {{ update_form.first_name(class_='form-control', placeholder='Your name') }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Current Role</label>
+              {{ update_form.current_role_id(class_='form-select') }}
+              <div class="small text-muted mt-1">Current role: {{ (update_form.current_role_id.choices | selectattr('0', 'equalto', update_form.current_role_id.data) | map(attribute=1) | first) or 'Not set' }}</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Years of Experience</label>
+              {{ update_form.years_experience(class_='form-control', placeholder='e.g., 5') }}
+            </div>
+          </div>
+          <div class="mt-3 d-flex justify-content-between align-items-center">
+            <div class="text-muted small">Keep your profile accurate so PathMap recommendations stay sharp.</div>
+            <button class="btn btn-primary" type="submit">Save Profile</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane fade {% if active_tab == 'password' %}show active{% endif %}" id="tab-password" role="tabpanel">
+      <div class="settings-section-card p-4">
+        <h5>Change Password</h5>
+        <form method="POST" action="{{ url_for('profile.change_password') }}">
+          {{ password_form.hidden_tag() }}
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <label class="form-label">Current Password</label>
+              {{ password_form.current_password(class_='form-control') }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">New Password</label>
+              {{ password_form.new_password(class_='form-control', placeholder='Minimum 8 characters') }}
+              <div class="small text-muted mt-1">Minimum 8 characters. Use a mix of letters, numbers, and symbols for a strong password.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Confirm New Password</label>
+              {{ password_form.confirm_new_password(class_='form-control') }}
+            </div>
+          </div>
+          <div class="mt-3 d-flex justify-content-between align-items-center">
+            <div class="small text-muted">Last changed: Unknown</div>
+            <button class="btn btn-primary" type="submit">Update Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane fade {% if active_tab == 'notifications' %}show active{% endif %}" id="tab-notifications" role="tabpanel">
+      <div class="settings-section-card p-4">
+        <h5>Email Notifications</h5>
+        <form method="POST" action="{{ url_for('profile.update_notifications') }}">
+          {{ notification_form.hidden_tag() }}
+          <div class="notification-toggle-row d-flex align-items-center justify-content-between py-2">
+            <div>
+              <div class="fw-semibold">Weekly progress check-in reminders</div>
+              <div class="text-muted small">Stay accountable with gentle nudges every week.</div>
+            </div>
+            {{ notification_form.email_weekly_checkin(class_='form-check-input form-switch') }}
+          </div>
+          <div class="notification-toggle-row d-flex align-items-center justify-content-between py-2">
+            <div>
+              <div class="fw-semibold">Notification when my journey submission is published</div>
+              <div class="text-muted small">Get alerted when your story goes live.</div>
+            </div>
+            {{ notification_form.email_journey_published(class_='form-check-input form-switch') }}
+          </div>
+          <div class="notification-toggle-row d-flex align-items-center justify-content-between py-2">
+            <div>
+              <div class="fw-semibold">Session booking updates and confirmations</div>
+              <div class="text-muted small">Booking confirmations, reminders, and updates.</div>
+            </div>
+            {{ notification_form.email_session_updates(class_='form-check-input form-switch') }}
+          </div>
+          <div class="notification-toggle-row d-flex align-items-center justify-content-between py-2">
+            <div>
+              <div class="fw-semibold">PathMap product updates and new features</div>
+              <div class="text-muted small">Major improvements and new releases.</div>
+            </div>
+            {{ notification_form.email_product_updates(class_='form-check-input form-switch') }}
+          </div>
+          <div class="notification-toggle-row d-flex align-items-center justify-content-between py-2">
+            <div>
+              <div class="fw-semibold">Career tips and inspiration emails</div>
+              <div class="text-muted small">Occasional guidance and curated inspiration.</div>
+            </div>
+            {{ notification_form.email_marketing(class_='form-check-input form-switch') }}
+          </div>
+          <div class="mt-3 d-flex justify-content-between align-items-center">
+            <a class="small" href="{{ url_for('profile.update_notifications') }}" onclick="event.preventDefault(); document.querySelectorAll('#tab-notifications input[type=checkbox]').forEach(cb => cb.checked = false);">Unsubscribe from all marketing emails</a>
+            <button class="btn btn-primary" type="submit">Save Preferences</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="tab-pane fade {% if active_tab == 'subscription' %}show active{% endif %}" id="tab-subscription" role="tabpanel">
+      <div class="settings-section-card p-4">
+        <h5>Subscription</h5>
+        {% if current_user.is_premium %}
+          <div class="subscription-status-card p-3 mb-3">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <span class="badge bg-primary">{{ 'Premium Annual' if current_user.subscription_tier == 'annual' else 'Premium Monthly' }}</span>
+              <div>Status: <strong>{{ 'Cancellation Requested' if current_user.subscription_cancel_requested else 'Active' }}</strong></div>
+              <div>Renews on {{ current_user.subscription_expires.strftime('%B %d, %Y') if current_user.subscription_expires else 'Auto-renew enabled' }}</div>
+            </div>
+          </div>
+          <form method="POST" action="{{ url_for('payment.cancel_subscription') }}" class="d-inline">
+            {{ action_form.hidden_tag() }}
+            <button class="btn btn-outline-danger" type="submit">Cancel Subscription</button>
+          </form>
+          {% if current_user.subscription_cancel_requested %}
+            <form method="POST" action="{{ url_for('payment.reactivate_subscription') }}" class="d-inline ms-2">
+              {{ action_form.hidden_tag() }}
+              <button class="btn btn-success" type="submit">Reactivate</button>
+            </form>
+          {% endif %}
+        {% else %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="billing-plan-active p-3 border rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Premium Monthly</h6>
+                  <span class="badge bg-primary">₹1,499/month</span>
+                </div>
+                <p class="text-muted small mb-2">Unlimited analyses, roadmaps, journeys, AI advisor, and Shadow Sessions.</p>
+                <button class="btn btn-primary w-100" data-plan="monthly" data-razorpay-key="{{ razorpay_key_id }}" data-user-email="{{ current_user.email }}" data-user-name="{{ current_user.first_name or '' }}" onclick="initSubscriptionCheckout(event)">Start Premium Monthly</button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="billing-plan-active p-3 border rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Premium Annual</h6>
+                  <span class="badge bg-warning text-dark">₹11,999/year</span>
+                </div>
+                <p class="text-muted small mb-2">Best value: 33% savings vs monthly billing.</p>
+                <button class="btn btn-warning w-100" data-plan="annual" data-razorpay-key="{{ razorpay_key_id }}" data-user-email="{{ current_user.email }}" data-user-name="{{ current_user.first_name or '' }}" onclick="initSubscriptionCheckout(event)">Start Premium Annual</button>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="tab-pane fade {% if active_tab == 'privacy' %}show active{% endif %}" id="tab-privacy" role="tabpanel">
+      <div class="settings-section-card p-4">
+        <h5>Privacy & Data</h5>
+        <div class="mb-3">
+          <form method="POST" action="{{ url_for('profile.request_data_export') }}">
+            {{ action_form.hidden_tag() }}
+            <p class="text-muted mb-2">Download all your PathMap data as a JSON file.</p>
+            <button class="btn btn-outline-primary" type="submit">Request Data Export</button>
+          </form>
+        </div>
+        <div class="danger-zone-card p-3 mt-3">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <div class="fw-bold text-danger">Permanently Delete My Account and Data</div>
+              <div class="text-muted small">Deletes assessments, analyses, roadmaps, progress entries, and personal data. Journey content may be retained in anonymized form. Financial records are retained for 7 years for compliance.</div>
+            </div>
+          </div>
+          <form class="mt-3" method="POST" action="{{ url_for('profile.request_gdpr_deletion') }}" id="gdpr-delete-form">
+            {{ gdpr_form.hidden_tag() }}
+            <label class="form-label">Type DELETE to confirm</label>
+            {{ gdpr_form.confirmation_text(class_='form-control', placeholder='DELETE') }}
+            <div class="mt-2 d-flex justify-content-between align-items-center">
+              <a href="{{ url_for('main.privacy') }}" class="small">View Privacy Policy</a>
+              <button class="btn btn-danger" type="submit">Permanently Delete Account</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

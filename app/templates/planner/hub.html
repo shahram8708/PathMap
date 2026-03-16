@@ -1,0 +1,113 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Pivot Planner{% endblock %}
+{% block breadcrumb %}Dashboard / Pivot Planner{% endblock %}
+{% block dashboard_content %}
+<div class="mb-4 p-4 rounded-3 shadow-sm" style="background: linear-gradient(120deg, #1A5276, #2E86C1); color: #fff;">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+    <div>
+      <div class="text-uppercase small fw-semibold">Planner hub</div>
+      <h1 class="mb-2">Move from analysis to action</h1>
+      <p class="mb-0">Use feasibility scoring, the decision framework, and a 90-day roadmap to commit to your pivot.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <span class="badge bg-light text-dark">Assessment: {{ 'Complete' if assessment and assessment.is_fully_complete else 'Incomplete' }}</span>
+      <span class="badge bg-light text-dark">Saved analyses: {{ saved_analyses|length }}</span>
+      <span class="badge bg-light text-dark">Decision summary: {{ 'Ready' if decision_complete else 'Pending' }}</span>
+      {% if active_roadmap %}
+        <a class="badge bg-warning text-dark text-decoration-none" href="{{ url_for('planner.roadmap_detail', roadmap_id=active_roadmap.id) }}">Active roadmap</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-xl-8">
+    <div class="row g-3">
+      {% for tool in planner_tools %}
+        <div class="col-12 col-md-6">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column gap-3">
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: rgba(42, 118, 169, 0.15); color: #1A5276;">
+                  <i class="bi {{ tool.icon }} fs-4"></i>
+                </div>
+                {% if tool.status == 'available' %}
+                  <span class="badge bg-success align-self-start">Ready</span>
+                {% else %}
+                  <span class="badge bg-secondary align-self-start"><i class="bi bi-lock-fill me-1"></i>Locked</span>
+                {% endif %}
+              </div>
+              <div>
+                <h5 class="mb-1">{{ tool.name }}</h5>
+                <p class="text-muted mb-2 small">{{ tool.description }}</p>
+                {% if tool.premium %}
+                  <div class="small {% if is_premium %}text-success{% else %}text-warning{% endif %}">
+                    {% if is_premium %}<i class="bi bi-shield-check me-1"></i>Premium included{% else %}<i class="bi bi-star me-1"></i>Premium feature{% endif %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="mt-auto">
+                {% if tool.status == 'available' %}
+                  <a class="btn btn-primary w-100" style="background-color:#1A5276;border-color:#1A5276;" href="{{ tool.url }}">Open tool -></a>
+                {% else %}
+                  <div class="alert alert-light border d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-exclamation-circle text-warning"></i>
+                    <div class="small">{{ tool.lock_reason }}</div>
+                  </div>
+                  {% if tool.premium and not is_premium %}
+                    <a class="btn btn-warning w-100" href="{{ url_for('main.pricing') }}">Upgrade to unlock</a>
+                  {% else %}
+                    <a class="btn btn-outline-primary w-100" href="{{ tool.url }}">Complete prerequisite</a>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-12 col-xl-4">
+    <div class="pathmap-card p-3 h-100">
+      <h6 class="mb-3">Your readiness</h6>
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div>
+          <div class="fw-semibold">Assessment completion</div>
+          <div class="text-muted small">Finish all 5 modules to unlock the best recommendations.</div>
+        </div>
+        <span class="badge {% if assessment and assessment.is_fully_complete %}bg-success{% else %}bg-secondary{% endif %}">{{ 'Complete' if assessment and assessment.is_fully_complete else 'Pending' }}</span>
+      </div>
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div>
+          <div class="fw-semibold">Skill Transfer Analyses</div>
+          <div class="text-muted small">Saved scenarios ready for planning.</div>
+        </div>
+        <span class="badge bg-info text-dark">{{ saved_analyses|length }}</span>
+      </div>
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div>
+          <div class="fw-semibold">Decision Summary</div>
+          <div class="text-muted small">Complete the 5-step framework once.</div>
+        </div>
+        <span class="badge {% if decision_complete %}bg-primary{% else %}bg-secondary{% endif %}">{{ 'Ready' if decision_complete else 'Not started' }}</span>
+      </div>
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="fw-semibold">Roadmap</div>
+          <div class="text-muted small">90-day execution plan.</div>
+        </div>
+        {% if active_roadmap %}
+          <a class="badge bg-warning text-dark text-decoration-none" href="{{ url_for('planner.roadmap_detail', roadmap_id=active_roadmap.id) }}">Active</a>
+        {% else %}
+          <span class="badge bg-secondary">Pending</span>
+        {% endif %}
+      </div>
+      <hr>
+      <div class="d-flex flex-column gap-2">
+        <a class="btn btn-outline-primary" href="{{ url_for('analysis.analysis_hub') }}"><i class="bi bi-diagram-3 me-1"></i>Go to Skill Analysis</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('assessment.assessment_hub') }}"><i class="bi bi-clipboard-check me-1"></i>Review Assessment</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

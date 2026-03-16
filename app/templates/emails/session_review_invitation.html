@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>How was your session?</title>
+</head>
+<body style="font-family: Inter, Arial, sans-serif; background:#f8f9fa; margin:0; padding:0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa; padding:24px 0;">
+    <tr><td align="center">
+      <table width="640" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden;">
+        <tr><td style="background:#1A5276; color:#fff; padding:16px 24px; font-size:18px; font-weight:700;">PathMap</td></tr>
+        <tr><td style="padding:24px; color:#1C2833;">
+          <h2 style="margin-top:0;">Share quick feedback</h2>
+          <p>Hi {{ booking.booker.display_name }},</p>
+          <p>Thanks for completing your shadow session with {{ booking.provider.display_name }}. A 30-second review helps the next career changer pick the right provider.</p>
+          <ul>
+            <li><strong>Booking ID:</strong> {{ booking.id }}</li>
+            <li><strong>Provider:</strong> {{ booking.provider.display_name }}</li>
+            <li><strong>Session date:</strong> {{ (booking.session_completed_at or booking.booked_at).strftime('%b %d, %Y') }}</li>
+          </ul>
+          <p style="margin:24px 0;">
+            <a href="{{ url_for('sessions.leave_review_form', booking_id=booking.id, _external=True) }}" style="background:#1E8449; color:#fff; padding:12px 18px; text-decoration:none; border-radius:6px;">Leave a 30s review</a>
+          </p>
+          <p style="color:#7F8C8D; font-size:13px;">Your review stays honest and constructive; no fluff needed.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,71 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}Dashboard / Career Journeys / Submit Your Journey{% endblock %}
+{% block dashboard_content %}
+<div class="mb-3">
+  <h1 class="h3 mb-1">Share Your Career Pivot Journey</h1>
+  <p class="text-muted mb-0">Your experience — both what worked and what didn't — will help other professionals make better decisions. PathMap publishes anonymized, structured journey accounts.</p>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4"><div class="card p-3 h-100"><strong>Help others avoid your mistakes</strong><div class="text-muted small">Your honest account prevents others from repeating the same missteps.</div></div></div>
+  <div class="col-md-4"><div class="card p-3 h-100"><strong>Your story is anonymized and private</strong><div class="text-muted small">We publish with a pseudonym only. No identifying details are shared.</div></div></div>
+  <div class="col-md-4"><div class="card p-3 h-100"><strong>Priority review for Premium members</strong><div class="text-muted small">Premium submissions are reviewed first, but all stories are welcome.</div></div></div>
+</div>
+
+{% if has_pending %}
+  <div class="alert alert-warning">You have a journey submission currently under review. Our team will review it within 3-5 business days. You can submit a new one, but note that we can only publish one journey per user.</div>
+{% endif %}
+
+<div class="submission-bias-notice mb-3">
+  <strong>Important:</strong> PathMap specifically requests that you complete the "What Failed" section honestly and in detail. Our users trust this platform because it shows realistic outcomes. Submissions with vague or missing failure sections may not be approved for publication.
+</div>
+
+<form method="POST" action="{{ url_for('journeys.submit_journey_save') }}" class="card shadow-sm">
+  {{ form.hidden_tag() }}
+  <div class="card-body">
+    <h5 class="mb-3">Your Transition</h5>
+    <div class="row g-3">
+      <div class="col-md-6">{{ form.origin_role_id.label(class_='form-label') }}{{ form.origin_role_id(class_='form-select') }}</div>
+      <div class="col-md-6">{{ form.target_role_id.label(class_='form-label') }}{{ form.target_role_id(class_='form-select') }}</div>
+      <div class="col-md-6">{{ form.origin_industry.label(class_='form-label') }}{{ form.origin_industry(class_='form-control') }}</div>
+      <div class="col-md-6">{{ form.target_industry.label(class_='form-label') }}{{ form.target_industry(class_='form-control') }}</div>
+      <div class="col-md-6">{{ form.experience_at_pivot.label(class_='form-label') }}{{ form.experience_at_pivot(class_='form-control') }}</div>
+      <div class="col-md-6">{{ form.geographic_region.label(class_='form-label') }}{{ form.geographic_region(class_='form-select') }}</div>
+    </div>
+
+    <h5 class="mt-4 mb-3">Timeline & Outcome</h5>
+    <div class="row g-3">
+      <div class="col-md-4">{{ form.timeline_months.label(class_='form-label') }}{{ form.timeline_months(class_='form-control') }}</div>
+      <div class="col-md-4">{{ form.preparation_months.label(class_='form-label') }}{{ form.preparation_months(class_='form-control') }}</div>
+      <div class="col-md-4">{{ form.outcome_status.label(class_='form-label') }}{{ form.outcome_status(class_='form-select') }}</div>
+      <div class="col-12">{{ form.reversal_reason.label(class_='form-label') }}{{ form.reversal_reason(class_='form-control', placeholder='If reversed, explain why you changed course.') }}</div>
+    </div>
+
+    <h5 class="mt-4 mb-3">Financial (optional)</h5>
+    <div class="row g-3">
+      <div class="col-md-6">{{ form.income_change_pct.label(class_='form-label') }}{{ form.income_change_pct(class_='form-control', placeholder='Use negative for decrease, e.g., -20') }}</div>
+      <div class="col-md-6">{{ form.total_cost_inr.label(class_='form-label') }}{{ form.total_cost_inr(class_='form-control') }}</div>
+    </div>
+
+    <h5 class="mt-4 mb-3">Your Story</h5>
+    <div class="mb-3">{{ form.summary.label(class_='form-label') }}{{ form.summary(class_='form-control', rows='3') }}</div>
+    <div class="mb-3">{{ form.what_worked.label(class_='form-label') }}{{ form.what_worked(class_='form-control', rows='4') }}</div>
+    <div class="mb-3">
+      <label class="form-label what-failed-label"><i class="bi bi-exclamation-circle me-1"></i>What Didn't Work (Required — Be Honest)</label>
+      {{ form.what_failed(class_='form-control', rows='5', placeholder='This is the most important section. Vague or missing responses here are the most common reason submissions are not approved.') }}
+    </div>
+    <div class="mb-3">{{ form.unexpected_discoveries.label(class_='form-label') }}{{ form.unexpected_discoveries(class_='form-control', rows='3') }}</div>
+    <div class="mb-3">{{ form.advice_to_others.label(class_='form-label') }}{{ form.advice_to_others(class_='form-control', rows='3') }}</div>
+
+    <h5 class="mt-4 mb-3">Attribution</h5>
+    <div class="row g-3">
+      <div class="col-md-6">{{ form.pseudonym.label(class_='form-label') }}{{ form.pseudonym(class_='form-control', placeholder="e.g., 'Priya S.' or 'A. Kumar'") }}</div>
+      <div class="col-12 consent-checkbox-wrapper">{{ form.submitter_consented() }} {{ form.submitter_consented.label }}</div>
+    </div>
+
+    <div class="d-grid mt-3">
+      <button type="submit" class="btn btn-primary btn-lg">Submit My Journey for Review</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

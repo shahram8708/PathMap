@@ -1,0 +1,219 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">Learning Resources</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip" href="{{ url_for('analysis.analysis_hub') }}"><i class="bi bi-diagram-3"></i> Skill Analysis</a>
+  <a class="cta-chip" href="{{ url_for('planner.planner_hub') }}"><i class="bi bi-compass"></i> Planner</a>
+  <a class="cta-chip" href="{{ url_for('progress.progress_dashboard') }}"><i class="bi bi-graph-up"></i> Progress</a>
+  <a class="cta-chip" href="{{ url_for('resources.my_bookmarks') }}"><i class="bi bi-bookmark"></i> Bookmarked Resources</a>
+  {% if not current_user.is_premium %}
+    <a class="cta-chip premium" href="{{ url_for('main.pricing') }}"><i class="bi bi-lock-fill"></i> Premium ₹1,499/mo</a>
+  {% endif %}
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h4 mb-1"><i class="bi bi-book me-2 text-primary"></i>Learning Resource Library</h1>
+    <p class="text-muted mb-0">Curated, vetted learning resources for every skill in the PathMap database. Find the best courses, tutorials, and projects for your specific skill gaps.</p>
+    <div class="small text-muted mt-1">{{ library_stats.total_resources }} resources · Free, low-cost, and premium options</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('resources.create_resource') }}"><i class="bi bi-plus-lg"></i> Add a Resource</a>
+  </div>
+</div>
+
+{% if recommended_resources %}
+<div class="card border-0 shadow-sm p-3 mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div>
+      <h5 class="mb-0"><i class="bi bi-star me-2 text-warning"></i>Recommended for Your Skill Gaps</h5>
+      <div class="text-muted small">Based on your Skill Transfer Analysis, these resources target your highest-priority skill gaps.</div>
+    </div>
+  </div>
+  <div class="recommended-resources-scroll d-flex gap-3 overflow-auto">
+    {% for res in recommended_resources %}
+    <div class="resource-card {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %} p-3 border rounded-3" style="min-width: 260px;">
+      <div class="fw-bold">{{ res.title }}</div>
+      <div class="text-muted small mb-1">{{ res.provider }}</div>
+      <div class="d-flex flex-wrap gap-1 mb-2">
+        <span class="badge format-badge text-dark {{ res.format|lower }}">{{ res.format|capitalize }}</span>
+        <span class="badge cost-badge text-dark {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %}">{{ res.cost_tier|capitalize }}</span>
+        <span class="badge bg-light text-muted">~{{ res.estimated_hours }}h</span>
+        <a class="skill-gap-resource-tag gap-importance-high" href="{{ url_for('resources.skill_resources', skill_id=res.skill.id) }}">{{ res.skill.name }}</a>
+      </div>
+      <div class="d-flex align-items-center gap-1 mb-2">
+        <i class="bi bi-star-fill star-filled"></i><span class="small fw-semibold">{{ '%.1f'|format(res.quality_rating or 0) }}</span>
+      </div>
+      <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ res.url }}">View Resource →</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm p-3 mb-4">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <h5 class="mb-1">Complete a Skill Transfer Analysis</h5>
+      <div class="text-muted">Get personalized resource recommendations for your specific skill gaps.</div>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('analysis.analysis_hub') }}">Start Analysis</a>
+  </div>
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-lg-3 mb-3">
+    <div class="card p-3 shadow-sm border-0">
+      <div class="mb-3">
+        <label class="form-label small text-muted">Search resources</label>
+        <input type="text" id="resource-search-input" class="form-control" placeholder="Search by skill or title" value="{{ current_filters.search or '' }}">
+        <div id="resource-search-results" class="list-group position-absolute w-100 d-none"></div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-muted">Browse by Category</label>
+        <div class="d-grid gap-2">
+          {% for cat, skills in skill_categories.items() %}
+          <a class="btn btn-outline-primary btn-sm {% if current_filters.category == cat %}active{% endif %}" href="{{ url_for('resources.library', category=cat) }}">{{ cat }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-muted">Format</label>
+        {% for fmt in ['video','text','project','course','bootcamp'] %}
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="format_filter" id="fmt_{{ fmt }}" value="{{ fmt }}" {% if current_filters.format_type == fmt %}checked{% endif %}>
+            <label class="form-check-label" for="fmt_{{ fmt }}">{{ fmt|capitalize }}</label>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-muted">Cost</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="cost_filter" id="cost_all" value="" {% if not current_filters.cost_tier %}checked{% endif %}>
+          <label class="form-check-label" for="cost_all">All</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="cost_filter" id="cost_free" value="free" {% if current_filters.cost_tier == 'free' %}checked{% endif %}>
+          <label class="form-check-label" for="cost_free">Free only</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="cost_filter" id="cost_low" value="low_cost" {% if current_filters.cost_tier == 'low_cost' %}checked{% endif %}>
+          <label class="form-check-label" for="cost_low">Free + Low cost</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="cost_filter" id="cost_premium" value="premium" {% if current_filters.cost_tier == 'premium' %}checked{% endif %}>
+          <label class="form-check-label" for="cost_premium">All including premium</label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small text-muted">Quality rating</label>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="rating_filter" id="rating_any" value="" checked>
+          <label class="form-check-label" for="rating_any">Any</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="rating_filter" id="rating_4" value="4.0">
+          <label class="form-check-label" for="rating_4">4.0+</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="rating_filter" id="rating_45" value="4.5">
+          <label class="form-check-label" for="rating_45">4.5+</label>
+        </div>
+      </div>
+      <button class="btn btn-primary w-100" id="apply-resource-filters">Apply Filters</button>
+    </div>
+  </div>
+  <div class="col-lg-9">
+    <div class="row g-3">
+      {% for res in resources %}
+      <div class="col-md-6">
+        <div class="resource-card {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %} p-3 h-100 position-relative">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold">{{ res.title }}</div>
+              <div class="text-muted small">{{ res.provider }}</div>
+            </div>
+            <button class="btn btn-sm resource-bookmark-btn {% if res.bookmarks|selectattr('user_id','equalto', current_user.id)|list %}bookmarked{% endif %}" data-resource-id="{{ res.id }}" aria-label="Bookmark">
+              <i class="bi {% if res.bookmarks|selectattr('user_id','equalto', current_user.id)|list %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i>
+            </button>
+          </div>
+          <div class="d-flex flex-wrap gap-1 my-2">
+            <span class="badge format-badge text-dark {{ res.format|lower }}">{{ res.format|capitalize }}</span>
+            <span class="badge cost-badge text-dark {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %}">{{ res.cost_tier|capitalize }}</span>
+            <span class="badge bg-light text-muted">~{{ res.estimated_hours }}h</span>
+          </div>
+          <div class="d-flex align-items-center gap-1 mb-2">
+            <i class="bi bi-star-fill star-filled"></i><span class="small fw-semibold">{{ '%.1f'|format(res.quality_rating or 0) }}</span>
+          </div>
+          <div class="small text-muted mb-3">Skill: <a href="{{ url_for('resources.skill_resources', skill_id=res.skill.id) }}">{{ res.skill.name }}</a> · Category: {{ res.skill.category }}</div>
+          <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ res.url }}">View Resource →</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% if is_limited %}
+    <div class="premium-resource-overlay card p-3 mt-3">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="fw-bold">Upgrade to see all resources</div>
+          <div class="text-muted small">Free plan shows 2 resources per skill. PathMap Premium unlocks the full library.</div>
+        </div>
+        <a class="btn btn-warning" href="{{ url_for('main.pricing') }}">Upgrade ₹1,499/month →</a>
+      </div>
+    </div>
+    {% endif %}
+    <div class="mt-4">
+      {% if pagination.pages > 1 %}
+        <nav aria-label="Resource pagination">
+          <ul class="pagination">
+            {% if pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('resources.library', page=pagination.prev_num, **current_filters) }}">Previous</a></li>
+            {% endif %}
+            {% for page_num in pagination.iter_pages() %}
+              {% if page_num %}
+              <li class="page-item {% if page_num == pagination.page %}active{% endif %}"><a class="page-link" href="{{ url_for('resources.library', page=page_num, **current_filters) }}">{{ page_num }}</a></li>
+              {% else %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+              {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('resources.library', page=pagination.next_num, **current_filters) }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/marketplace.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    initBookmarkToggle();
+    initResourceSearch();
+    document.getElementById('apply-resource-filters').addEventListener('click', function() {
+      const params = new URLSearchParams(window.location.search);
+      const searchVal = document.getElementById('resource-search-input').value;
+      const fmt = document.querySelector('input[name="format_filter"]:checked');
+      const cost = document.querySelector('input[name="cost_filter"]:checked');
+      const rating = document.querySelector('input[name="rating_filter"]:checked');
+      params.set('search', searchVal || '');
+      if (fmt) { params.set('format_type', fmt.value); } else { params.delete('format_type'); }
+      if (cost && cost.value) { params.set('cost_tier', cost.value); } else { params.delete('cost_tier'); }
+      if (rating && rating.value) { params.set('min_rating', rating.value); } else { params.delete('min_rating'); }
+      window.location.href = `${window.location.pathname}?${params.toString()}`;
+    });
+  });
+</script>
+{% endblock %}

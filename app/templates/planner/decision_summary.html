@@ -1,0 +1,126 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Decision Summary{% endblock %}
+{% block breadcrumb %}Dashboard / Pivot Planner / Decision Summary{% endblock %}
+{% block dashboard_content %}
+<div class="mb-4 p-4 rounded-3 shadow-sm" style="background: linear-gradient(115deg, #1A5276, #2E86C1); color: #fff;">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+    <div>
+      <div class="text-uppercase small fw-semibold">Decision Summary</div>
+      <h1 class="mb-1">Your committed pivot direction</h1>
+      <p class="mb-0">Review the five steps you captured and keep this as your accountability document.</p>
+    </div>
+    <div class="text-end">
+      <div class="small text-uppercase opacity-75">Target role</div>
+      <div class="fw-bold">{{ target_role }}</div>
+      <div class="small">from {{ origin_role }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="badge bg-light text-dark">Transfer score: {{ analysis.transfer_score }}</span>
+  <span class="badge bg-light text-dark">Feasibility: {{ analysis.feasibility_score }}</span>
+  <span class="badge bg-success">Decision completed</span>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a class="btn btn-primary" style="background-color:#1A5276;border-color:#1A5276;" href="{{ url_for('planner.download_decision_pdf', analysis_id=analysis.id) }}">Download PDF</a>
+  <a class="btn btn-outline-primary" href="{{ url_for('planner.roadmap_form') }}">Build my roadmap</a>
+  <a class="btn btn-outline-secondary" href="{{ url_for('analysis.analysis_detail', analysis_id=analysis.id) }}">View analysis</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-12">
+    <div class="alert alert-warning border-0" role="alert">
+      <div class="fw-semibold mb-1">AI commitment statement</div>
+      <div class="mb-0">{{ decision_data.get('ai_commitment_statement', 'I am committing to the direction defined above and will execute consistently for the next 90 days.') }}</div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="pathmap-card p-3 h-100">
+      <h6 class="mb-2">Step 1 - Define the real decision</h6>
+      {% set step1 = decision_data.get('step_1', {}) %}
+      <div class="mb-2"><span class="text-muted small">Decision</span><div class="fw-semibold">{{ step1.get('real_decision', 'Not captured') }}</div></div>
+      <div class="mb-2">
+        <span class="text-muted small">Options</span>
+        <ul class="mb-0">
+          {% for opt in step1.get('decision_options', []) %}
+            <li>{{ opt }}</li>
+          {% endfor %}
+          {% if not step1.get('decision_options') %}
+            <li class="text-muted">Not listed</li>
+          {% endif %}
+        </ul>
+      </div>
+      <div><span class="text-muted small">Stakes</span><div>{{ step1.get('decision_stakes', 'Not provided') }}</div></div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="pathmap-card p-3 h-100">
+      <h6 class="mb-2">Step 2 - Values alignment</h6>
+      {% set values_check = decision_data.get('step_2', {}).get('values_check', {}) %}
+      {% if values_check %}
+        <ul class="mb-0">
+          {% for value_name, option in values_check.items() %}
+            <li><strong>{{ value_name }}:</strong> {{ option }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="text-muted">No values captured.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="pathmap-card p-3 h-100">
+      <h6 class="mb-2">Step 3 - Tested assumptions</h6>
+      {% set assumptions = decision_data.get('step_3', {}).get('assumptions', []) %}
+      {% if assumptions %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Assumption</th>
+                <th style="width:100px;">Confidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for assumption in assumptions %}
+                <tr>
+                  <td>{{ assumption.get('option', '') }}</td>
+                  <td>{{ assumption.get('assumption', '') }}</td>
+                  <td>{{ assumption.get('confidence', 0) }}/5</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-muted">No assumptions documented.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="pathmap-card p-3 h-100">
+      <h6 class="mb-2">Step 4 - 10/10/10 future view</h6>
+      {% set step4 = decision_data.get('step_4', {}) %}
+      <div class="mb-2"><span class="text-muted small">10 days</span><div>{{ step4.get('ten_days', 'Not provided') }}</div></div>
+      <div class="mb-2"><span class="text-muted small">10 months</span><div>{{ step4.get('ten_months', 'Not provided') }}</div></div>
+      <div><span class="text-muted small">10 years</span><div>{{ step4.get('ten_years', 'Not provided') }}</div></div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="pathmap-card p-3">
+      <h6 class="mb-2">Step 5 - Commitment</h6>
+      {% set step5 = decision_data.get('step_5', {}) %}
+      <div class="mb-2"><span class="text-muted small">Direction</span><div class="fw-semibold">{{ step5.get('committed_direction', target_role) }}</div></div>
+      <div><span class="text-muted small">Commitment note</span><div>{{ step5.get('commitment_note', 'Not provided') }}</div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

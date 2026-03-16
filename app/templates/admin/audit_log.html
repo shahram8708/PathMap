@@ -1,0 +1,40 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Admin • Audit Log{% endblock %}
+{% set page_title = 'Audit Log' %}
+{% set page_tagline = 'Trace every admin action with context' %}
+{% block admin_header_actions %}
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-arrow-left"></i> Admin Home</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.gdpr_admin') }}"><i class="bi bi-shield-lock"></i> GDPR</a>
+  </div>
+{% endblock %}
+{% block admin_content %}
+<div class="pathmap-card p-3">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Target</th>
+          <th>Details</th>
+          <th>IP</th>
+          <th>When</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr>
+          <td class="fw-semibold">{{ entry.action_type }}</td>
+          <td>{{ entry.target_type }} {{ entry.target_id }}</td>
+          <td class="text-muted small">{{ entry.details or '—' }}</td>
+          <td class="text-muted small">{{ entry.ip_address or '—' }}</td>
+          <td class="text-muted small">{{ entry.performed_at.strftime('%b %d, %Y %H:%M') if entry.performed_at else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">No admin actions recorded yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

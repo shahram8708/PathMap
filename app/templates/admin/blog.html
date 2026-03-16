@@ -1,0 +1,146 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Admin • Blog{% endblock %}
+{% set page_title = 'Blog' %}
+{% set page_tagline = 'Publish thought leadership and updates' %}
+{% block admin_header_actions %}
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-arrow-left"></i> Admin Home</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.journeys_admin') }}"><i class="bi bi-map"></i> Journeys</a>
+  </div>
+{% endblock %}
+{% block admin_content %}
+<div class="row g-3 mb-4">
+  <div class="col-lg-5">
+    <div class="pathmap-card p-3 h-100">
+      <div class="fw-bold mb-2">Create post</div>
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.title.label(class='form-label') }}
+          {{ form.title(class='form-control', placeholder='Title') }}
+        </div>
+        <div class="mb-3">
+          {{ form.slug.label(class='form-label') }}
+          {{ form.slug(class='form-control', placeholder='optional-custom-slug') }}
+          <div class="text-muted small">If empty we will generate from the title.</div>
+        </div>
+        <div class="mb-3">
+          {{ form.cover_image_url.label(class='form-label') }}
+          {{ form.cover_image_url(class='form-control', placeholder='https://...') }}
+        </div>
+        <div class="mb-3">
+          {{ form.tags.label(class='form-label') }}
+          {{ form.tags(class='form-control', placeholder='Comma separated') }}
+        </div>
+        <div class="mb-3">
+          {{ form.excerpt.label(class='form-label') }}
+          {{ form.excerpt(class='form-control', rows='2') }}
+        </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            {{ form.content.label(class='form-label mb-0') }}
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-markdown-preview">Show Preview</button>
+          </div>
+          <div class="text-muted small mb-1" id="markdown-word-count">Word count: 0 words. Recommended: 500+ words for a quality article.</div>
+          {{ form.content(class='form-control', rows='6', id='content-textarea') }}
+          <div id="markdown-preview-panel" class="markdown-content blog-post border rounded p-4 bg-white" style="display:none; min-height: 300px;"></div>
+        </div>
+        <div class="form-check mb-3">
+          {{ form.is_published(class='form-check-input', id='is_published') }}
+          <label class="form-check-label" for="is_published">Publish immediately</label>
+        </div>
+        <button class="btn btn-pathmap-primary w-100">Save Post</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="pathmap-card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="fw-bold">Recent posts</div>
+        <span class="badge bg-light text-dark">{{ posts|length }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Title</th><th>Status</th><th>Published</th></tr></thead>
+          <tbody>
+            {% for post in posts %}
+            <tr>
+              <td class="fw-semibold">{{ post.title }}</td>
+              <td>{% if post.is_published %}<span class="badge bg-success">Published</span>{% else %}<span class="badge bg-secondary">Draft</span>{% endif %}</td>
+              <td class="text-muted small">{{ post.published_at.strftime('%b %d, %Y') if post.published_at else '—' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted">No posts yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('content-textarea');
+    const toggleBtn = document.getElementById('toggle-markdown-preview');
+    const previewPanel = document.getElementById('markdown-preview-panel');
+    const wordCountEl = document.getElementById('markdown-word-count');
+
+    const debounceRender = (fn, delay = 300) => {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+      };
+    };
+
+    const loadMarked = () => new Promise((resolve) => {
+      if (window.marked) {
+        resolve();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+      script.onload = resolve;
+      document.body.appendChild(script);
+    });
+
+    const updateWordCount = () => {
+      if (!wordCountEl || !textarea) return;
+      const count = (textarea.value.trim().match(/\S+/g) || []).length;
+      wordCountEl.textContent = `Word count: ${count} words. Recommended: 500+ words for a quality article.`;
+    };
+
+    const renderPreview = async () => {
+      if (!previewPanel || !textarea || previewPanel.style.display === 'none') return;
+      await loadMarked();
+      const parser = window.marked ? window.marked.parse : (val) => val;
+      previewPanel.innerHTML = parser(textarea.value || '');
+    };
+
+    const debouncedRender = debounceRender(renderPreview, 300);
+
+    if (textarea) {
+      textarea.addEventListener('input', () => {
+        updateWordCount();
+        debouncedRender();
+      });
+      updateWordCount();
+    }
+
+    if (toggleBtn && previewPanel) {
+      toggleBtn.addEventListener('click', async () => {
+        const isHidden = previewPanel.style.display === 'none' || previewPanel.style.display === '';
+        previewPanel.style.display = isHidden ? 'block' : 'none';
+        toggleBtn.textContent = isHidden ? 'Hide Preview' : 'Show Preview';
+        if (isHidden) {
+          await renderPreview();
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>New Session Booking</title>
+</head>
+<body style="font-family: Inter, Arial, sans-serif; background:#f8f9fa; margin:0; padding:0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa; padding:24px 0;">
+    <tr><td align="center">
+      <table width="640" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden;">
+        <tr><td style="background:#1A5276; color:#fff; padding:16px 24px; font-size:18px; font-weight:700;">PathMap</td></tr>
+        <tr><td style="padding:24px; color:#1C2833;">
+          <h2 style="margin-top:0;">New Session Booking</h2>
+          <p>Hi {{ provider.display_name }},</p>
+          <p>You have a new shadow session booking.</p>
+          <ul>
+            <li><strong>Amount you'll receive:</strong> ₹{{ '{:,.0f}'.format(booking.provider_payout_inr) }} (after 12.5% PathMap fee)</li>
+            <li><strong>Booking ID:</strong> {{ booking.id }}</li>
+            <li><strong>Booker notes:</strong> {{ booking.notes_from_booker or 'No additional notes provided.' }}</li>
+          </ul>
+          <p>Next steps:</p>
+          <ol>
+            <li>Share your video call link with the booker via your PathMap dashboard.</li>
+            <li>Confirm the session time and any pre-work if needed.</li>
+            <li>Deliver an honest, actionable 45-60 minute session.</li>
+          </ol>
+          <p style="margin:24px 0;">
+            <a href="{{ url_for('sessions.provider_dashboard', _external=True) }}" style="background:#1E8449; color:#fff; padding:12px 18px; text-decoration:none; border-radius:6px;">Manage Your Bookings</a>
+          </p>
+          <p style="color:#7F8C8D; font-size:13px;">Thank you for helping career changers make confident decisions.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,140 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}Dashboard / Skill Transfer Analyzer / Compare Paths{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex flex-column flex-lg-row align-items-start justify-content-between mb-3">
+  <div>
+    <h1 class="h3 mb-1">Comparing Your Career Pivot Options</h1>
+    <div class="text-muted">All analyses use your same current role and skill profile as the starting point.</div>
+    {% if origin_role %}<div class="fw-bold mt-1">Starting from: {{ origin_role.title }}</div>{% endif %}
+  </div>
+</div>
+
+{% if comparisons|length == 0 %}
+  <div class="alert alert-info">Select analyses from the hub to compare.</div>
+{% else %}
+  <div class="table-responsive">
+    <table class="table compare-table">
+      <thead>
+        <tr>
+          <th></th>
+          {% for item in comparisons %}
+            <th>
+              <div class="compare-col-header">
+                <div class="fw-bold">{{ item.target_role.title }}</div>
+                <span class="badge bg-light text-dark">{{ item.target_role.category }}</span>
+              </div>
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="compare-row-label">Transfer Score</td>
+          {% for item in comparisons %}
+            {% set ts = item.transfer_score or 0 %}
+            {% set cls = 'text-danger' %}
+            {% if ts >= 70 %}{% set cls = 'text-success' %}{% elif ts >= 50 %}{% set cls = 'text-warning' %}{% endif %}
+            <td class="compare-score-cell {{ cls }}">{{ '%.1f' % ts }}%</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Feasibility Score</td>
+          {% for item in comparisons %}
+            <td>{{ item.feasibility_score or 0 }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Direct Transfer Skills</td>
+          {% for item in comparisons %}
+            <td>
+              <div class="fw-bold">{{ item.direct_count }}</div>
+              {% for skill in (item.analysis.direct_skills or [])[:3] %}
+                <span class="skill-badge-direct mb-1">{{ skill.skill_name }}</span>
+              {% endfor %}
+            </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Partial Transfer Skills</td>
+          {% for item in comparisons %}
+            <td>
+              <div class="fw-bold">{{ item.partial_count }}</div>
+              {% for skill in (item.analysis.partial_skills or [])[:3] %}
+                <span class="skill-badge-partial mb-1">{{ skill.skill_name }}</span>
+              {% endfor %}
+            </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Skill Gaps</td>
+          {% for item in comparisons %}
+            <td>
+              <div class="fw-bold">{{ item.gap_count }}</div>
+              {% for skill in (item.analysis.gap_skills or [])[:3] %}
+                <span class="skill-badge-gap mb-1">{{ skill.skill_name }}</span>
+              {% endfor %}
+            </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Estimated Learning Hours</td>
+          {% for item in comparisons %}
+            <td>{{ item.analysis.estimated_learning_hours or 0 }} hours · ~{{ ((item.analysis.estimated_learning_hours or 0)/20)|round(1) }} weeks at 20hrs/week</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Top Gap Skills</td>
+          {% for item in comparisons %}
+            <td>
+              <ol class="mb-0">
+                {% for skill in (item.top_gap_skills or [])[:3] %}
+                  <li>{{ skill.skill_name }}</li>
+                {% endfor %}
+              </ol>
+            </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Historical Success Rate</td>
+          {% for item in comparisons %}
+            {% set hs = item.analysis.feasibility_breakdown['historical_success']['score'] * 100 if item.analysis.feasibility_breakdown and 'historical_success' in item.analysis.feasibility_breakdown else 0 %}
+            <td>{{ hs|round(0) }}%</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Income Feasibility</td>
+          {% for item in comparisons %}
+            {% set fs = item.analysis.feasibility_breakdown['financial_feasibility']['score'] * 100 if item.analysis.feasibility_breakdown and 'financial_feasibility' in item.analysis.feasibility_breakdown else 0 %}
+            <td>{{ fs|round(0) }}%</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="compare-row-label">Resource Availability</td>
+          {% for item in comparisons %}
+            {% set rs = item.analysis.feasibility_breakdown['resource_availability']['score'] * 100 if item.analysis.feasibility_breakdown and 'resource_availability' in item.analysis.feasibility_breakdown else 0 %}
+            <td>{{ rs|round(0) }}%</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td></td>
+          {% for item in comparisons %}
+            <td class="text-center">
+              <a class="btn btn-outline-primary btn-sm mb-2" href="{{ url_for('analysis.analysis_detail', analysis_id=item.analysis.id) }}">View Full Analysis →</a>
+              <a class="btn btn-primary btn-sm" href="{{ url_for('planner.roadmap_form') }}">Generate Roadmap for This Path →</a>
+            </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card pathmap-card p-3 mt-3">
+    <div class="fw-bold mb-2">Which path is right for me?</div>
+    <ul class="mb-0">
+      <li>If you prioritize speed: Choose the path with the highest transfer score.</li>
+      <li>If you prioritize income upside: Check the historical income change data in the Journey Explorer.</li>
+      <li>If you prioritize certainty: Choose the path with the highest overall feasibility score.</li>
+    </ul>
+  </div>
+{% endif %}
+{% endblock %}

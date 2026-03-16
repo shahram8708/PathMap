@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}500 — Server Error | PathMap{% endblock %}
+{% block content %}
+<div class="error-page-container">
+  <div class="error-page-card">
+    <div class="error-code-display">500</div>
+    <div class="error-icon-container tools"><i class="bi bi-tools"></i></div>
+    <h2 class="error-heading">Something Went Wrong on Our End</h2>
+    <p class="error-body-text">An unexpected error occurred while loading this page. It’s on us, not you. Our monitoring tools have recorded the issue so we can fix it quickly.</p>
+    <div class="error-actions">
+      <button type="button" class="btn btn-primary w-100" onclick="location.reload()">Try Again</button>
+      <a class="text-decoration-none" href="{{ url_for('main.index') }}">Go to Homepage</a>
+      <a class="text-decoration-none" href="{{ url_for('main.contact') }}">Contact Support</a>
+    </div>
+    <div class="error-help-text mt-3">If this keeps happening, please email support@pathmap.in and mention what you were trying to do. This helps us fix it faster.</div>
+  </div>
+</div>
+{% endblock %}

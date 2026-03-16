@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Your PathMap Shadow Session is Confirmed</title>
+</head>
+<body style="font-family: Inter, Arial, sans-serif; background:#f8f9fa; margin:0; padding:0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="640" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden;">
+          <tr>
+            <td style="background:#1A5276; color:#fff; padding:16px 24px; font-size:18px; font-weight:700;">PathMap</td>
+          </tr>
+          <tr>
+            <td style="padding:24px; color:#1C2833;">
+              <h2 style="margin-top:0;">Your PathMap Shadow Session is Confirmed</h2>
+              <p>Hi {{ booking.booker.first_name or booking.booker.display_name }},</p>
+              <p>Your booking <strong>#{{ booking.id }}</strong> is confirmed.</p>
+              <ul>
+                <li><strong>Provider:</strong> {{ provider.display_name }} ({{ provider.current_role.title }})</li>
+                <li><strong>Amount Paid:</strong> ₹{{ '{:,.0f}'.format(booking.amount_inr) }}</li>
+                <li><strong>Payment ID:</strong> {{ booking.razorpay_payment_id }}</li>
+                <li><strong>Booking Date:</strong> {{ booking.booked_at.strftime('%b %d, %Y') }}</li>
+              </ul>
+              <h4>What happens next</h4>
+              <ol>
+                <li>The provider will share a video call link within 24 hours of booking.</li>
+                <li>Come prepared with your career questions.</li>
+                <li>Attend your 45-60 minute session.</li>
+                <li>Leave a review to help the PathMap community.</li>
+              </ol>
+              <p style="margin:24px 0;">
+                <a href="{{ url_for('sessions.booking_confirmation', booking_id=booking.id, _external=True) }}" style="background:#2E86C1; color:#fff; padding:12px 18px; text-decoration:none; border-radius:6px;">View Booking Details</a>
+              </p>
+              <p style="color:#7F8C8D; font-size:13px;">If you have any questions, reply to this email or contact support@pathmap.in.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

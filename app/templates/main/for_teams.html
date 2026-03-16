@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}For Teams{% endblock %}
+{% block content %}
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <span class="badge text-bg-light border fw-semibold mb-3">PathMap for Teams</span>
+        <h1 class="fw-bold mb-3">Upskill, redeploy, and retain your people with evidence-backed career moves</h1>
+        <p class="text-muted mb-4">We give managers and people teams the same feasibility engine, journey data, and roadmaps we use for individual pivots—now tuned for cohorts, redeployment, and internal mobility.</p>
+        <div class="d-flex flex-wrap gap-3">
+          <a class="btn btn-pathmap-primary" href="{{ url_for('main.contact', type='teams') }}">Talk to sales</a>
+          <a class="btn btn-pathmap-outline" href="{{ url_for('main.features') }}">See product</a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="pathmap-card p-4">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Time to redeploy</span>
+            <span class="fw-bold text-primary">8-12 weeks</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Manager visibility</span>
+            <span class="fw-bold text-success">Live dashboards</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Eligible cohorts</span>
+            <span class="fw-bold text-primary">Interns to mid-level</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Support coverage</span>
+            <span class="fw-bold text-primary">APAC & EMEA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <p class="text-uppercase text-muted small mb-1">Outcomes</p>
+    <h2 class="fw-bold mb-4">Reduce attrition and keep talent billable</h2>
+    <div class="row g-4">
+      {% set outcomes = [
+        {'title':'Internal mobility', 'desc':'Match employees to adjacent roles with quantified skill overlap and time-to-productivity.'},
+        {'title':'Redeploy at-risk talent', 'desc':'Feasibility-led redeployment plans that respect compensation bands and location constraints.'},
+        {'title':'Graduate programs', 'desc':'Structured journeys for early career cohorts with milestones, resources, and mentor touchpoints.'},
+        {'title':'Manager visibility', 'desc':'Dashboards for managers to see momentum, blockers, and roadmap completion rates.'},
+        {'title':'Proof of skill', 'desc':'Role-specific proof-of-work templates and review rubrics for objective evaluation.'},
+        {'title':'Hiring efficiency', 'desc':'Surface internal candidates who already meet 70% of target role requirements.'}
+      ] %}
+      {% for item in outcomes %}
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary mb-3" style="width:48px;height:48px;">
+            <i class="bi bi-stars fs-5"></i>
+          </div>
+          <h5 class="fw-bold">{{ item.title }}</h5>
+          <p class="text-muted mb-0">{{ item.desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <p class="text-uppercase text-muted small mb-1">How it works for teams</p>
+    <h3 class="fw-bold mb-4">From intake to redeployment</h3>
+    <div class="row g-4">
+      {% set steps = [
+        {'title':'Intake', 'desc':'Define roles to fill, compensation bands, regions, and timelines.'},
+        {'title':'Assess cohorts', 'desc':'Employees complete the assessment and import skills from their projects.'},
+        {'title':'Feasibility & fit', 'desc':'We score each person against target roles and flag the best matches.'},
+        {'title':'Roadmaps', 'desc':'Generate individualized 60-90 day plans with milestones and proof-of-work.'},
+        {'title':'Enablement', 'desc':'Mentor office hours, shadow sessions, and curated resources per cohort.'},
+        {'title':'Report & adjust', 'desc':'Managers track momentum, unblock teams, and graduate candidates to roles.'}
+      ] %}
+      {% for step in steps %}
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100">
+          <div class="d-flex align-items-center mb-3">
+            <span class="timeline-badge me-2">Step {{ loop.index }}</span>
+            <h6 class="fw-bold mb-0">{{ step.title }}</h6>
+          </div>
+          <p class="text-muted mb-0">{{ step.desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-6">
+        <p class="text-uppercase text-muted small mb-1">Trust and compliance</p>
+        <h3 class="fw-bold mb-3">Enterprise-ready from day one</h3>
+        <ul class="ps-3 mb-4">
+          <li class="text-muted mb-2">Role-based access controls for managers, coaches, and employees</li>
+          <li class="text-muted mb-2">PII minimization; journey data stays anonymized and access-controlled</li>
+          <li class="text-muted mb-2">Audit-friendly exports for compliance reviews and leadership updates</li>
+          <li class="text-muted mb-0">SOC 2-aligned security practices; encrypted data at rest and in transit</li>
+        </ul>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge bg-light text-dark border">SSO ready</span>
+          <span class="badge bg-light text-dark border">Regional hosting</span>
+          <span class="badge bg-light text-dark border">Data processing addendum</span>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="pathmap-card p-4 h-100">
+          <h6 class="fw-bold mb-3">Manager dashboard snapshot</h6>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Cohort momentum</span>
+            <span class="fw-bold text-primary">82%</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">On-track to redeploy</span>
+            <span class="fw-bold text-success">17 of 21</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Avg. skill overlap</span>
+            <span class="fw-bold text-primary">76%</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Open blockers</span>
+            <span class="fw-bold text-warning"><i class="bi bi-exclamation-triangle me-1"></i>3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 section-alt">
+  <div class="container text-center">
+    <div class="pathmap-card p-5">
+      <h3 class="fw-bold mb-2">Bring PathMap to your team</h3>
+      <p class="text-muted mb-4">We customize rollouts for cohorts, business units, and internal mobility programs. Expect onboarding in under two weeks.</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a class="btn btn-pathmap-primary" href="{{ url_for('main.contact', type='teams') }}">Book a demo</a>
+        <a class="btn btn-pathmap-outline" href="{{ url_for('main.pricing') }}">Review plans</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

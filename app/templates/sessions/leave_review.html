@@ -1,0 +1,51 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+Dashboard / Shadow Sessions / Leave Review
+{% endblock %}
+{% block dashboard_content %}
+<div class="card shadow-sm border-0 p-4">
+  <div class="d-flex align-items-center gap-3 mb-3">
+    <div class="provider-avatar-circle">{{ provider.display_name[0]|upper }}</div>
+    <div>
+      <div class="fw-bold">{{ provider.display_name }}</div>
+      <div class="text-muted small">{{ provider.current_role.title }}</div>
+      <div class="small">Booking #{{ booking.id }}</div>
+    </div>
+  </div>
+  <form method="post" action="{{ url_for('sessions.submit_review', booking_id=booking.id) }}" id="review-form">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+      <label class="form-label">{{ form.rating.label.text }}</label>
+      <div class="d-flex align-items-center gap-2" id="rating-stars" data-input-name="{{ form.rating.name }}">
+        {% for value, label in form.rating.choices %}
+          <input type="radio" name="{{ form.rating.name }}" value="{{ value }}" class="d-none" id="star-{{ value }}">
+          <label for="star-{{ value }}" class="fs-4 text-warning star-input" data-value="{{ value }}">★</label>
+        {% endfor %}
+      </div>
+      {% for error in form.rating.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+      {{ form.review_text.label(class='form-label') }}
+      {{ form.review_text(class='form-control', rows='4') }}
+      {% for error in form.review_text.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="form-check mb-2">
+      {{ form.would_recommend(class='form-check-input', id='would_recommend') }}
+      <label class="form-check-label" for="would_recommend">{{ form.would_recommend.label.text }}</label>
+    </div>
+    <div class="form-check mb-3">
+      {{ form.session_helped_decision(class='form-check-input', id='session_helped_decision') }}
+      <label class="form-check-label" for="session_helped_decision">{{ form.session_helped_decision.label.text }}</label>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('sessions.provider_profile', provider_id=provider.id) }}">Cancel</a>
+      <button type="submit" class="btn btn-primary">Submit Review</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/marketplace.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', initRatingStarsInput);</script>
+{% endblock %}

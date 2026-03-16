@@ -1,0 +1,183 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}My 90-Day Roadmap{% endblock %}
+{% block breadcrumb %}Dashboard / Pivot Planner / Roadmap{% endblock %}
+{% block dashboard_content %}
+<div class="mb-4 p-4 rounded-3 shadow-sm" style="background: linear-gradient(115deg, #1A5276, #2E86C1); color: #fff;">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+    <div>
+      <div class="text-uppercase small fw-semibold">90-Day Roadmap</div>
+      <h1 class="mb-1">{{ target_role.title if target_role else 'Target role' }}</h1>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge bg-light text-dark">Current week: {{ current_week }}</span>
+        <span class="badge bg-light text-dark">Days remaining: {{ days_remaining }}</span>
+        <span class="badge bg-warning text-dark">Check-ins logged: {{ progress_entries_count }}</span>
+      </div>
+    </div>
+    <div class="text-end w-100" style="max-width: 320px;">
+      <div class="small text-uppercase opacity-75 mb-1">Overall progress</div>
+      <div class="progress" style="height: 12px;">
+        <div id="overall-progress-bar" class="progress-bar" role="progressbar" style="width: {{ overall_progress_pct }}%; background-color:#1A5276;" aria-valuenow="{{ overall_progress_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div id="overall-progress-label" class="small mt-1">{{ overall_progress_pct }}% complete ({{ days_into_pivot }} days in)</div>
+      {% if upcoming_checkpoint %}
+        <div class="alert alert-info mt-2 mb-0 py-2 px-3">Checkpoint ahead: Day {{ upcoming_checkpoint }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a class="btn btn-primary" style="background-color:#1A5276;border-color:#1A5276;" href="{{ url_for('progress.checkin_form') }}">Log a check-in</a>
+  <a class="btn btn-outline-primary" href="{{ url_for('progress.progress_dashboard') }}">View progress dashboard</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-3">
+    <div class="pathmap-card p-3 h-100">
+      <div class="text-muted small">Total tasks</div>
+      <div class="fw-bold fs-4">{{ roadmap_summary_stats.total_tasks }}</div>
+      <div class="small">Skill {{ roadmap_summary_stats.skill_tasks_count }}, Network {{ roadmap_summary_stats.network_tasks_count }}, Portfolio {{ roadmap_summary_stats.portfolio_tasks_count }}</div>
+    </div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="pathmap-card p-3 h-100">
+      <div class="text-muted small">Estimated hours</div>
+      <div class="fw-bold fs-4">{{ roadmap_summary_stats.total_estimated_hours }} hrs</div>
+      <div class="small">Avg/week {{ roadmap_summary_stats.avg_hours_per_week }} hrs</div>
+    </div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="pathmap-card p-3 h-100">
+      <div class="text-muted small">Busiest week</div>
+      <div class="fw-bold fs-4">Week {{ roadmap_summary_stats.weeks_with_most_tasks }}</div>
+      <div class="small">{{ roadmap_summary_stats.busiest_week_hours }} hrs scheduled</div>
+    </div>
+  </div>
+  <div class="col-12 col-md-3">
+    <div class="pathmap-card p-3 h-100">
+      <div class="text-muted small">Checkpoints</div>
+      <div class="fw-bold fs-4">{{ roadmap_summary_stats.checkpoint_tasks_count }}</div>
+      <div class="small">Milestones at days 30, 60, 90</div>
+    </div>
+  </div>
+</div>
+
+<div class="accordion" id="roadmapAccordion">
+  {% for week in milestones %}
+    {% set week_id = 'week-' ~ week.week %}
+    {% set is_current = week.week == current_week %}
+    <div class="accordion-item mb-2">
+      <h2 class="accordion-header" id="{{ week_id }}-header">
+        <button class="accordion-button {% if not is_current %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#{{ week_id }}" aria-expanded="{{ 'true' if is_current else 'false' }}" aria-controls="{{ week_id }}">
+          <div class="d-flex flex-column flex-lg-row w-100 justify-content-between align-items-start align-items-lg-center">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge {% if is_current %}bg-primary{% else %}bg-secondary{% endif %}">Week {{ week.week }}</span>
+              {% if week.milestone_flag %}<span class="badge bg-warning text-dark">Checkpoint</span>{% endif %}
+            </div>
+            <div class="small text-muted">{{ week.start_date }} to {{ week.end_date }}</div>
+          </div>
+        </button>
+      </h2>
+      <div id="{{ week_id }}" class="accordion-collapse collapse {% if is_current %}show{% endif %}" aria-labelledby="{{ week_id }}-header" data-bs-parent="#roadmapAccordion">
+        <div class="accordion-body">
+          {% if week.milestone_flag and week.checkpoint_prompt %}
+            <div class="alert alert-warning">{{ week.checkpoint_prompt }}</div>
+          {% endif %}
+          {% if week.tasks %}
+            <div class="list-group list-group-flush">
+              {% for task in week.tasks %}
+                {% set badge_class = 'bg-primary' %}
+                {% if task.type == 'network' %}
+                  {% set badge_class = 'bg-success' %}
+                {% elif task.type == 'portfolio' %}
+                  {% set badge_class = 'bg-purple' %}
+                {% elif task.type == 'checkpoint' %}
+                  {% set badge_class = 'bg-warning text-dark' %}
+                {% endif %}
+                <label class="list-group-item d-flex gap-3 align-items-start roadmap-task-item {% if task.is_completed %}text-decoration-line-through opacity-75{% endif %}">
+                  <input class="form-check-input mt-1" type="checkbox" data-task-checkbox data-task-id="{{ task.id }}" data-roadmap-id="{{ roadmap.id }}" {% if task.is_completed %}checked{% endif %}>
+                  <div class="w-100">
+                    <div class="d-flex align-items-start justify-content-between gap-2">
+                      <div>
+                        <div class="fw-semibold">{{ task.title }}</div>
+                        <div class="text-muted small">{{ task.description }}</div>
+                      </div>
+                      <span class="badge {{ badge_class }} text-uppercase" style="letter-spacing:0.02em;">{{ task.type }}</span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-3 small mt-2">
+                      {% if task.estimated_hours %}
+                        <span class="text-muted"><i class="bi bi-clock me-1"></i>{{ task.estimated_hours }} hrs</span>
+                      {% endif %}
+                      {% if task.resource_link %}
+                        <a href="{{ task.resource_link }}" target="_blank" rel="noopener" class="text-decoration-none">Resource</a>
+                      {% endif %}
+                    </div>
+                  </div>
+                </label>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-muted">No tasks scheduled for this week.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const checkboxes = document.querySelectorAll('[data-task-checkbox]');
+    const progressBar = document.getElementById('overall-progress-bar');
+    const progressLabel = document.getElementById('overall-progress-label');
+
+    const badgeFix = () => {
+      document.querySelectorAll('.bg-purple').forEach((el) => {
+        el.style.backgroundColor = '#6f42c1';
+        el.style.color = '#fff';
+      });
+    };
+    badgeFix();
+
+    checkboxes.forEach((box) => {
+      box.addEventListener('change', async () => {
+        if (!box.checked) {
+          box.checked = true;
+          return;
+        }
+        const taskId = box.dataset.taskId;
+        const roadmapId = box.dataset.roadmapId;
+        const item = box.closest('.roadmap-task-item');
+        try {
+          const res = await fetch(`/pivot-planner/roadmap/${roadmapId}/complete-tasks`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ task_ids: [taskId] })
+          });
+          const data = await res.json();
+          if (data.success) {
+            item?.classList.add('text-decoration-line-through', 'opacity-75');
+            if (progressBar && typeof data.progress_pct !== 'undefined') {
+              progressBar.style.width = `${data.progress_pct}%`;
+              progressBar.setAttribute('aria-valuenow', data.progress_pct);
+            }
+            if (progressLabel && typeof data.progress_pct !== 'undefined') {
+              progressLabel.textContent = `${data.progress_pct}% complete ({{ days_into_pivot }} days in)`;
+            }
+          } else {
+            box.checked = false;
+          }
+        } catch (err) {
+          box.checked = false;
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

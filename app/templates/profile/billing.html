@@ -1,0 +1,110 @@
+{% extends 'dashboard_base.html' %}
+
+{% block breadcrumb %}
+Dashboard / Settings / Billing
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card subscription-status-card p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <div class="fw-bold">Current Plan: {{ current_plan_name }}</div>
+          <div class="text-muted small">Status: {{ 'Active' if current_user.is_premium and not current_user.subscription_cancel_requested else ('Cancellation Requested' if current_user.subscription_cancel_requested else 'Inactive') }}</div>
+          <div class="text-muted small">Next renewal: {{ next_renewal_date or 'Not scheduled' }}</div>
+          {% if current_user.razorpay_subscription_id %}
+            <div class="text-muted small">Subscription ID: {{ current_user.razorpay_subscription_id }}</div>
+          {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          {% if current_user.is_premium %}
+            <form method="POST" action="{{ url_for('payment.cancel_subscription') }}">
+              {{ action_form.hidden_tag() }}
+              <button class="btn btn-outline-danger" type="submit">Cancel Subscription</button>
+            </form>
+            {% if current_user.subscription_cancel_requested %}
+              <form method="POST" action="{{ url_for('payment.reactivate_subscription') }}">
+                {{ action_form.hidden_tag() }}
+                <button class="btn btn-success" type="submit">Reactivate</button>
+              </form>
+            {% endif %}
+          {% else %}
+            <a class="btn btn-primary" href="#" data-plan="monthly" data-razorpay-key="{{ razorpay_key_id }}" data-user-email="{{ current_user.email }}" data-user-name="{{ current_user.first_name or '' }}" onclick="initSubscriptionCheckout(event)">Start Premium Monthly</a>
+            <a class="btn btn-warning" href="#" data-plan="annual" data-razorpay-key="{{ razorpay_key_id }}" data-user-email="{{ current_user.email }}" data-user-name="{{ current_user.first_name or '' }}" onclick="initSubscriptionCheckout(event)">Start Premium Annual</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if not current_user.is_premium %}
+    <div class="col-12">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="billing-plan-active p-3 border rounded">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Premium Monthly</h6>
+              <span class="badge bg-primary">₹1,499/month</span>
+            </div>
+            <p class="text-muted small mb-2">Full access to analyses, roadmaps, journeys, AI advisor, and Shadow Sessions.</p>
+            <button class="btn btn-primary w-100" data-plan="monthly" data-razorpay-key="{{ razorpay_key_id }}" data-user-email="{{ current_user.email }}" data-user-name="{{ current_user.first_name or '' }}" onclick="initSubscriptionCheckout(event)">Start Premium Monthly</button>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="billing-plan-active p-3 border rounded">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Premium Annual</h6>
+              <span class="badge bg-warning text-dark">₹11,999/year</span>
+            </div>
+            <p class="text-muted small mb-2">Save 33% compared to monthly billing. All Premium features included.</p>
+            <button class="btn btn-warning w-100" data-plan="annual" data-razorpay-key="{{ razorpay_key_id }}" data-user-email="{{ current_user.email }}" data-user-name="{{ current_user.first_name or '' }}" onclick="initSubscriptionCheckout(event)">Start Premium Annual</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="col-12">
+    <div class="card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h5 class="mb-0">Payment History</h5>
+          <div class="text-muted small">Last {{ payments|length }} payments</div>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('payment.download_invoices') }}">
+          <i class="bi bi-download me-1"></i>Download CSV
+        </a>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle payment-history-table">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Amount (₹)</th>
+              <th>Payment ID</th>
+              <th>Invoice</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+              <tr>
+                <td>{{ p.payment_date.strftime('%b %d, %Y') if p.payment_date else '' }}</td>
+                <td>{{ p.plan_type|capitalize }} plan</td>
+                <td>₹{{ '%.2f'|format(p.amount_inr) }}</td>
+                <td class="text-muted small">{{ p.razorpay_payment_id }}</td>
+                <td class="text-muted small">PM-{{ p.id }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-muted">No payments yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

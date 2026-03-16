@@ -1,0 +1,115 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}Dashboard / Skill Transfer Analyzer{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-3">
+  <div>
+    <h1 class="h3 mb-1"><i class="bi bi-diagram-3 me-2"></i>Skill Transfer Analyzer</h1>
+    <div class="text-muted">Discover how much of your current professional experience carries over to careers you are considering. Most career pivots are 60-70% there already — see exactly where you stand.</div>
+  </div>
+  <div class="mt-3 mt-md-0">
+    {% if can_create_new %}
+      <a class="btn btn-primary" href="{{ url_for('analysis.new_analysis') }}">New Analysis →</a>
+    {% else %}
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#limitModal">New Analysis →</button>
+    {% endif %}
+  </div>
+</div>
+
+{% if not is_premium %}
+  {% if monthly_used >= 1 %}
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      You've used your 1 free analysis this month. Your next free analysis resets on {{ next_reset.strftime('%b %d, %Y') }}. Upgrade to Premium for unlimited analyses — ₹1,499/month.
+    </div>
+  {% else %}
+    <div class="alert alert-info" role="alert">Free plan: 1 analysis per month. Premium: unlimited.</div>
+  {% endif %}
+{% endif %}
+
+{% if analyses|length == 0 %}
+  <div class="card pathmap-card text-center p-4">
+    <div class="display-4 text-muted mb-2"><i class="bi bi-diagram-3"></i></div>
+    <h4>No analyses yet</h4>
+    <p class="text-muted">Start your first Skill Transfer Analysis to see how your current skills map to your target careers.</p>
+    <a class="btn btn-primary" href="{{ url_for('analysis.new_analysis') }}">Run Your First Analysis →</a>
+  </div>
+{% else %}
+  <div class="row">
+    {% for analysis in analyses %}
+      {% set transfer_score = analysis.transfer_score or 0 %}
+      {% set feasibility_score = analysis.feasibility_score or 0 %}
+      {% set feas_class = 'feasibility-badge-challenging' %}
+      {% set feas_label = 'Challenging' %}
+      {% if feasibility_score > 80 %}
+        {% set feas_class = 'feasibility-badge-excellent' %}
+        {% set feas_label = 'Excellent Match' %}
+      {% elif feasibility_score > 65 %}
+        {% set feas_class = 'feasibility-badge-strong' %}
+        {% set feas_label = 'Strong Match' %}
+      {% elif feasibility_score > 40 %}
+        {% set feas_class = 'feasibility-badge-feasible' %}
+        {% set feas_label = 'Feasible with Effort' %}
+      {% endif %}
+      <div class="col-12 col-lg-6 mb-4">
+        <div class="analysis-card h-100 p-3">
+          <div class="from-to-header d-flex justify-content-between align-items-start">
+            <div>From {{ analysis.origin_role.title if analysis.origin_role else 'Current Role' }} → {{ analysis.target_role.title if analysis.target_role else 'Target Role' }}</div>
+            <span class="badge bg-light text-dark">{{ analysis.created_at.strftime('%b %d, %Y') }}</span>
+          </div>
+          <div class="d-flex align-items-center justify-content-between mt-3">
+            <div>
+              <div class="text-muted small">Transfer</div>
+              <div class="transfer-score-display">{{ '%.1f' % transfer_score }}%</div>
+            </div>
+            <div>
+              <div class="text-muted small">Gap</div>
+              <div class="h5 mb-0">{{ '%.1f' % (analysis.gap_score or 0) }}%</div>
+            </div>
+            <div>
+              <span class="feasibility-score-badge {{ feas_class }}">{{ feas_label }} · {{ '%.1f' % feasibility_score }}</span>
+            </div>
+          </div>
+          <div class="analysis-mini-stats mt-3">
+            <div class="stat green">Direct: {{ (analysis.direct_skills or [])|length }}</div>
+            <div class="stat amber">Partial: {{ (analysis.partial_skills or [])|length }}</div>
+            <div class="stat red">Gaps: {{ (analysis.gap_skills or [])|length }}</div>
+          </div>
+          <div class="compare-checkbox-area">
+            <a class="btn btn-link" href="{{ url_for('analysis.analysis_detail', analysis_id=analysis.id) }}">View Analysis →</a>
+            <div class="form-check">
+              <input class="form-check-input compare-checkbox" type="checkbox" value="{{ analysis.id }}" data-analysis-id="{{ analysis.id }}" id="compare{{ analysis.id }}">
+              <label class="form-check-label" for="compare{{ analysis.id }}">Compare</label>
+            </div>
+            <button class="btn btn-link text-danger p-0" type="button" onclick="if(confirm('Delete this analysis?')) fetch('{{ url_for('analysis.delete_analysis', analysis_id=analysis.id) }}',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(()=>window.location.reload())">Delete</button>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="d-flex justify-content-end">
+    <button id="compare-submit" class="btn btn-outline-primary" data-compare-url="{{ url_for('analysis.compare_analyses') }}" disabled>Compare Selected Paths →</button>
+  </div>
+{% endif %}
+
+<div class="modal fade" id="limitModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Upgrade for unlimited analyses</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Free plan allows 1 skill analysis per month. Upgrade to Premium for unlimited analyses and roadmap generation.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a class="btn btn-primary" href="{{ url_for('main.pricing') }}">Upgrade to Premium →</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/skill_map.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', () => { initCompareCheckboxes(); });</script>
+{% endblock %}

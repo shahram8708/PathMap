@@ -1,0 +1,174 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}Dashboard / Skill Transfer Analyzer / New Analysis{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-3">
+  <div>
+    <h1 class="h3 mb-1">Analyze a Career Pivot</h1>
+    <div class="text-muted">Select your current role and up to 3 careers you're considering. PathMap will show you exactly how much of your expertise carries over and what you'll need to develop.</div>
+  </div>
+</div>
+
+<form method="POST" action="{{ url_for('analysis.create_analysis') }}" id="new-analysis-form">
+  {{ form.hidden_tag() }}
+  <div class="row g-4">
+    <div class="col-md-5">
+      <div class="card pathmap-card p-3 h-100">
+        <div class="mb-2 fw-bold">Your current role</div>
+        <input type="search" class="form-control mb-3" placeholder="Search roles" id="origin-search">
+        <div class="role-search-list" id="origin-role-list">
+          {% for category, roles in roles_by_category.items() %}
+            <div class="mb-2">
+              <div class="fw-bold text-muted small mb-1">{{ category }}</div>
+              {% for role in roles %}
+                <button type="button" class="btn btn-outline-secondary w-100 text-start mb-1 origin-role-item" data-role-id="{{ role.id }}" data-role-title="{{ role.title }}" data-role-category="{{ role.category }}">
+                  <i class="bi bi-briefcase me-2"></i>{{ role.title }}
+                  <i class="bi bi-check-circle-fill float-end d-none"></i>
+                </button>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="small text-muted mt-2">Can't find your exact role? Select the closest match — the analysis uses skill categories, not job titles.</div>
+      </div>
+    </div>
+    <div class="col-md-7">
+      <div class="card pathmap-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <div class="fw-bold">Careers you're considering (1-3)</div>
+            <div class="text-muted small">You can analyze up to 3 target careers at once. Each will get its own detailed analysis.</div>
+          </div>
+          <div class="text-muted small" id="target-count">0 selected</div>
+        </div>
+        <div class="mb-2" id="selected-target-chips"></div>
+        <input type="search" class="form-control mb-3" placeholder="Search target roles" id="target-search">
+        <div class="role-search-list" id="target-role-list">
+          {% for category, roles in roles_by_category.items() %}
+            <div class="mb-2">
+              <div class="fw-bold text-muted small mb-1">{{ category }}</div>
+              {% for role in roles %}
+                <button type="button" class="btn btn-outline-secondary w-100 text-start mb-1 target-role-item" data-role-id="{{ role.id }}" data-role-title="{{ role.title }}" data-role-category="{{ role.category }}">
+                  <i class="bi bi-bullseye me-2"></i>{{ role.title }}
+                  <i class="bi bi-plus-circle float-end"></i>
+                </button>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="card mt-3 p-3 d-none" id="analysis-preview">
+          <div class="fw-bold mb-1">Analysis preview</div>
+          <div class="text-muted" id="preview-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{ form.origin_role_id }}
+  {{ form.target_role_ids }}
+  <div class="mt-4">
+    <button class="btn btn-primary btn-lg w-100 w-md-auto" id="submit-btn" type="submit" disabled>Run Skill Transfer Analysis →</button>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  const originButtons = Array.from(document.querySelectorAll('.origin-role-item'));
+  const targetButtons = Array.from(document.querySelectorAll('.target-role-item'));
+  const originInput = document.getElementById('{{ form.origin_role_id.id }}');
+  const targetInput = document.getElementById('{{ form.target_role_ids.id }}');
+  const submitBtn = document.getElementById('submit-btn');
+  const previewCard = document.getElementById('analysis-preview');
+  const previewText = document.getElementById('preview-text');
+  const targetChips = document.getElementById('selected-target-chips');
+  const targetCount = document.getElementById('target-count');
+
+  function filterList(searchEl, buttons) {
+    const query = searchEl.value.toLowerCase();
+    buttons.forEach(btn => {
+      const title = btn.dataset.roleTitle.toLowerCase();
+      const cat = btn.dataset.roleCategory.toLowerCase();
+      const match = title.includes(query) || cat.includes(query);
+      btn.classList.toggle('d-none', !match);
+    });
+  }
+
+  document.getElementById('origin-search').addEventListener('input', (e) => filterList(e.target, originButtons));
+  document.getElementById('target-search').addEventListener('input', (e) => filterList(e.target, targetButtons));
+
+  function updatePreview() {
+    const originTitle = originButtons.find(btn => btn.classList.contains('active'))?.dataset.roleTitle;
+    const targets = (targetInput.value || '').split(',').filter(Boolean);
+    if (originTitle && targets.length) {
+      previewCard.classList.remove('d-none');
+      const targetNames = targets.map(id => targetButtons.find(b => b.dataset.roleId === id)?.dataset.roleTitle).filter(Boolean).join(', ');
+      previewText.textContent = `You're about to analyze: ${originTitle} → ${targetNames}`;
+    } else {
+      previewCard.classList.add('d-none');
+      previewText.textContent = '';
+    }
+    submitBtn.disabled = !(originTitle && targets.length);
+  }
+
+  originButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      originButtons.forEach(b => { b.classList.remove('active'); b.querySelector('.bi-check-circle-fill')?.classList.add('d-none'); });
+      btn.classList.add('active');
+      btn.querySelector('.bi-check-circle-fill')?.classList.remove('d-none');
+      originInput.value = btn.dataset.roleId;
+      updatePreview();
+    });
+  });
+
+  function renderChips() {
+    targetChips.innerHTML = '';
+    const ids = (targetInput.value || '').split(',').filter(Boolean);
+    ids.forEach(id => {
+      const btn = targetButtons.find(b => b.dataset.roleId === id);
+      if (!btn) return;
+      const chip = document.createElement('span');
+      chip.className = 'badge bg-light text-dark me-2 mb-2';
+      chip.textContent = btn.dataset.roleTitle;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'btn btn-link btn-sm ms-2 p-0';
+      remove.textContent = '×';
+      remove.addEventListener('click', () => toggleTarget(btn));
+      chip.appendChild(remove);
+      targetChips.appendChild(chip);
+    });
+    targetCount.textContent = `${ids.length} selected`;
+  }
+
+  function toggleTarget(btn) {
+    let ids = (targetInput.value || '').split(',').filter(Boolean);
+    if (ids.includes(btn.dataset.roleId)) {
+      ids = ids.filter(id => id !== btn.dataset.roleId);
+      btn.classList.remove('active');
+      btn.querySelector('.bi-plus-circle')?.classList.remove('d-none');
+    } else {
+      if (ids.length >= 3) {
+        btn.blur();
+        btn.setAttribute('title', 'Maximum 3 target roles reached');
+        return;
+      }
+      ids.push(btn.dataset.roleId);
+      btn.classList.add('active');
+      btn.querySelector('.bi-plus-circle')?.classList.add('d-none');
+    }
+    targetInput.value = ids.join(',');
+    renderChips();
+    updatePreview();
+  }
+
+  targetButtons.forEach(btn => btn.addEventListener('click', () => toggleTarget(btn)));
+
+  {% if user_current_role_id %}
+    const preselect = originButtons.find(b => b.dataset.roleId === '{{ user_current_role_id }}');
+    if (preselect) {
+      preselect.click();
+    }
+  {% endif %}
+
+  renderChips();
+  updatePreview();
+</script>
+{% endblock %}

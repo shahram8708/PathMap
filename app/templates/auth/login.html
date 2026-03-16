@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Log In{% endblock %}
+{% block content %}
+<section class="auth-page">
+  <div class="auth-card">
+    <a href="{{ url_for('main.index') }}" class="auth-logo text-decoration-none">
+      <span style="color: #1A5276;">Path</span><span style="color: #2E86C1;">Map</span>
+    </a>
+    <h2 class="mb-2">Welcome back</h2>
+    <p class="text-muted mb-4">Log in to continue your PathMap journey.</p>
+
+    <form method="POST" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      <div class="mb-3">
+        <label for="email" class="form-label">Email Address</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          {{ form.email(class_='form-control form-control-lg', id='email', placeholder='you@example.com') }}
+        </div>
+        {% if form.email.errors %}
+          <div class="invalid-feedback d-block">{{ form.email.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <label for="password" class="form-label mb-0">Password</label>
+          <a href="{{ url_for('auth.forgot_password') }}" class="small">Forgot Password?</a>
+        </div>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          {{ form.password(class_='form-control form-control-lg', id='password', placeholder='Your password', **{'data-strength': 'loginStrength'}) }}
+          <button class="btn btn-outline-secondary" type="button" data-toggle-password="password">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <div class="password-strength" aria-hidden="true">
+          <div class="password-strength-bar" id="loginStrength"></div>
+        </div>
+        {% if form.password.errors %}
+          <div class="invalid-feedback d-block">{{ form.password.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check mb-4">
+        {{ form.remember_me(class_='form-check-input', id='remember_me') }}
+        <label class="form-check-label" for="remember_me">Keep me logged in for 7 days</label>
+      </div>
+
+      <div class="d-grid mb-3">
+        {{ form.submit(class_='btn btn-navy btn-lg') }}
+      </div>
+      <p class="text-center mb-0">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up free →</a></p>
+    </form>
+  </div>
+</section>
+{% endblock %}

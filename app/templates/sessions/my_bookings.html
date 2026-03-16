@@ -1,0 +1,218 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('sessions.marketplace') }}">Shadow Sessions</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">My Bookings</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip secondary" href="{{ url_for('sessions.marketplace') }}"><i class="bi bi-people"></i> Browse Providers</a>
+  <a class="cta-chip" href="{{ url_for('progress.progress_dashboard') }}"><i class="bi bi-graph-up"></i> Progress</a>
+  <a class="cta-chip" href="{{ url_for('planner.roadmap_form') }}"><i class="bi bi-map"></i> 90-Day Roadmap</a>
+  {% if not provider_profile %}
+    <a class="cta-chip" href="{{ url_for('sessions.become_provider') }}"><i class="bi bi-broadcast"></i> Become a Provider</a>
+  {% else %}
+    <a class="cta-chip" href="{{ url_for('sessions.provider_dashboard') }}"><i class="bi bi-speedometer2"></i> Provider Dashboard</a>
+  {% endif %}
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<ul class="nav nav-tabs mb-3" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#booked" type="button" role="tab">Sessions I've Booked</button>
+  </li>
+  {% if provider_profile %}
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#provider" type="button" role="tab">My Provider Profile</button>
+  </li>
+  {% endif %}
+</ul>
+<div class="tab-content">
+  <div class="tab-pane fade show active" id="booked" role="tabpanel">
+    {% if bookings %}
+      <div class="mb-3">
+        <h6>Active</h6>
+        {% if active_bookings %}
+          {% for booking in active_bookings %}
+          <div class="card p-3 mb-2 shadow-sm">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <div>
+                <div class="fw-bold">{{ booking.provider.display_name }}</div>
+                <div class="text-muted small">{{ booking.provider.current_role.title }}</div>
+                <div class="small">Booked on {{ booking.booked_at.strftime('%b %d, %Y') }}</div>
+              </div>
+              <div class="ms-auto text-end">
+                <div class="fw-semibold">₹{{ '{:,.0f}'.format(booking.amount_inr) }}</div>
+                <span class="badge bg-info text-dark">{{ booking.status_display }}</span>
+              </div>
+            </div>
+            <div class="mt-2">
+              {% if booking.session_link and booking.status in ['paid', 'session_scheduled', 'session_completed'] %}
+                {% if booking.session_scheduled_at %}
+                  <div class="small text-muted">Scheduled for {{ booking.session_scheduled_at.strftime('%b %d, %Y %I:%M %p') }}</div>
+                {% endif %}
+                <div class="small text-success">Join link: <a href="{{ booking.session_link }}" target="_blank" rel="noopener">Open session</a></div>
+              {% else %}
+                <div class="small text-muted">Join link will appear here after your provider schedules the session.</div>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-2 mt-2">
+              <a class="btn btn-outline-primary btn-sm" href="{{ url_for('sessions.booking_confirmation', booking_id=booking.id) }}">View Booking</a>
+              <button class="btn btn-success btn-sm" data-complete-booking="{{ booking.id }}">Mark as Completed</button>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted">No active bookings.</p>
+        {% endif %}
+      </div>
+      <div class="mb-3">
+        <h6>Completed</h6>
+        {% if completed_bookings %}
+          {% for booking in completed_bookings %}
+          <div class="card p-3 mb-2 shadow-sm">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <div>
+                <div class="fw-bold">{{ booking.provider.display_name }}</div>
+                <div class="text-muted small">{{ booking.provider.current_role.title }}</div>
+                <div class="small">Completed on {{ booking.session_completed_at.strftime('%b %d, %Y') if booking.session_completed_at else booking.booked_at.strftime('%b %d, %Y') }}</div>
+              </div>
+              <div class="ms-auto text-end">
+                <div class="fw-semibold">₹{{ '{:,.0f}'.format(booking.amount_inr) }}</div>
+                <span class="badge bg-success">{{ booking.status_display }}</span>
+              </div>
+            </div>
+            <div class="d-flex gap-2 mt-2">
+              {% if booking.can_be_reviewed %}
+                <a class="btn btn-warning btn-sm" href="{{ url_for('sessions.leave_review_form', booking_id=booking.id) }}">Leave a Review →</a>
+              {% elif booking.has_review %}
+                <span class="badge bg-light text-dark">Review submitted</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted">No completed sessions yet.</p>
+        {% endif %}
+      </div>
+      <div class="mb-3">
+        <h6>Pending Payment</h6>
+        {% if pending_bookings %}
+          {% for booking in pending_bookings %}
+          <div class="card p-3 mb-2 shadow-sm">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <div>
+                <div class="fw-bold">{{ booking.provider.display_name }}</div>
+                <div class="text-muted small">{{ booking.provider.current_role.title }}</div>
+                <div class="small">Started on {{ booking.booked_at.strftime('%b %d, %Y') }}</div>
+              </div>
+              <div class="ms-auto text-end">
+                <div class="fw-semibold">₹{{ '{:,.0f}'.format(booking.amount_inr) }}</div>
+                <span class="badge bg-secondary">{{ booking.status_display }}</span>
+              </div>
+            </div>
+            <div class="d-flex gap-2 mt-2">
+              <a class="btn btn-outline-primary btn-sm" href="{{ url_for('sessions.book_session', provider_id=booking.provider_id) }}">Complete Payment</a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted">No pending payments.</p>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="card p-4 text-center shadow-sm">
+        <h5>You haven't booked any sessions yet.</h5>
+        <p class="text-muted">Browse the marketplace to find professionals in your target career.</p>
+        <a class="btn btn-primary" href="{{ url_for('sessions.marketplace') }}">Browse Marketplace →</a>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if provider_profile %}
+  <div class="tab-pane fade" id="provider" role="tabpanel">
+    <div class="card p-3 shadow-sm mb-3">
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <div>
+          <div class="fw-bold">{{ provider_profile.display_name }}</div>
+          <div class="text-muted small">{{ provider_profile.current_role.title }}</div>
+        </div>
+        <div class="ms-auto d-flex gap-3">
+          <div>
+            <div class="small text-muted">Total earnings</div>
+            <div class="fw-bold">₹{{ '{:,.0f}'.format((provider_profile.total_sessions or 0) * ((provider_profile.price_inr or 0)|float) * 0.875) }}</div>
+          </div>
+          <div>
+            <div class="small text-muted">Sessions</div>
+            <div class="fw-bold">{{ provider_profile.total_sessions }}</div>
+          </div>
+          <div>
+            <div class="small text-muted">Avg rating</div>
+            <div class="fw-bold">{{ provider_profile.rating_display }}</div>
+          </div>
+          <div>
+            <div class="small text-muted">Reviews</div>
+            <div class="fw-bold">{{ provider_profile.total_reviews }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-3">
+        <a class="btn btn-outline-primary" href="{{ url_for('sessions.edit_provider_profile') }}">Manage Profile →</a>
+        <a class="btn btn-primary" href="{{ url_for('sessions.provider_profile', provider_id=provider_profile.id) }}">View My Public Profile →</a>
+      </div>
+    </div>
+    <div class="card p-3 shadow-sm">
+      <h6>Recent bookings as provider</h6>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr><th>Booker</th><th>Date</th><th>Amount earned</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for booking in provider_recent_bookings %}
+            <tr>
+              <td>PathMap member</td>
+              <td>{{ booking.booked_at.strftime('%b %d, %Y') }}</td>
+              <td>₹{{ '{:,.0f}'.format(booking.provider_payout_inr) }}</td>
+              <td><span class="badge bg-light text-dark">{{ booking.status_display }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted">No bookings yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-complete-booking]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const bookingId = this.getAttribute('data-complete-booking');
+        fetch(`{{ url_for('sessions.mark_session_complete', booking_id=0) }}`.replace('0', bookingId), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+          }
+        }).then(resp => resp.json()).then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.error || 'Unable to update');
+          }
+        }).catch(() => alert('Unable to update'));
+      });
+    });
+  });
+</script>
+{% endblock %}

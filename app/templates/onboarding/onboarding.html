@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% set step = step or 1 %}
+{% set role_categories = role_categories or ['Technology','Finance','Healthcare','Creative & Design','Business & Strategy','Education','Legal','Marketing & Growth','Operations','Other'] %}
+{% set motivation_options = [
+  {'value': 'feeling_stuck', 'label': 'Feeling stuck in my current role', 'icon': 'bi-signpost'},
+  {'value': 'automation_threat', 'label': 'Worried about automation in my field', 'icon': 'bi-cpu'},
+  {'value': 'better_income', 'label': 'Seeking better income', 'icon': 'bi-cash-coin'},
+  {'value': 'passion_mismatch', 'label': "Work doesn't match my passions", 'icon': 'bi-heart'},
+  {'value': 'burnout', 'label': 'Burnout from current work', 'icon': 'bi-emoji-frown'},
+  {'value': 'returning_to_work', 'label': 'Returning to work after a break', 'icon': 'bi-box-arrow-in-right'},
+  {'value': 'early_career_regret', 'label': 'Early career regret', 'icon': 'bi-arrow-counterclockwise'}
+] %}
+{% block content %}
+<div class="py-5" style="background:#EBF5FB; min-height: calc(100vh - 120px);">
+  <div class="container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 160px);">
+    <div class="card shadow-sm border-0" style="max-width: 720px; width: 100%; border-radius: 18px;">
+      <div class="card-body p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex align-items-center gap-2">
+            <div class="logo-mark small">PM</div>
+            <span class="fw-bold text-dark">PathMap</span>
+          </div>
+          <div class="onboarding-progress-steps w-50">
+            <div class="onboarding-step-circle {% if step > 1 %}completed{% elif step == 1 %}active{% else %}future{% endif %}">{% if step > 1 %}✓{% else %}1{% endif %}</div>
+            <div class="onboarding-step-line"></div>
+            <div class="onboarding-step-circle {% if step > 2 %}completed{% elif step == 2 %}active{% else %}future{% endif %}">{% if step > 2 %}✓{% else %}2{% endif %}</div>
+            <div class="onboarding-step-line"></div>
+            <div class="onboarding-step-circle {% if step == 3 %}active{% elif step > 3 %}completed{% else %}future{% endif %}">{% if step == 3 %}3{% elif step > 3 %}✓{% else %}3{% endif %}</div>
+          </div>
+        </div>
+
+        {% if step == 1 %}
+        <form method="POST" action="{{ url_for('onboarding.onboarding_step1') }}">
+          {{ form.hidden_tag() }}
+          <h2 class="fw-bold mb-2">{{ 'Welcome, ' + (current_user.first_name or '') + '. ' if current_user.first_name else '' }}Let's get to know you</h2>
+          <p class="text-muted mb-4">Three quick questions to personalize PathMap for your specific situation. Takes under 2 minutes.</p>
+
+          <div class="mb-4">
+            <h6 class="text-uppercase text-muted small mb-2">Current role category</h6>
+            <input type="hidden" name="current_role_category" id="current-role-category" value="{{ session.get('onboarding_step1_category', '') }}">
+            <div class="row g-3 onboarding-card-grid">
+              {% for category in role_categories %}
+              <div class="col-6 col-md-4">
+                <div class="onboarding-option-card onboarding-option-card-group" data-input="current-role-category" data-value="{{ category }}">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-briefcase"></i>
+                    <span class="fw-semibold">{{ category }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h6 class="text-uppercase text-muted small mb-2">Years of experience</h6>
+            <div class="d-flex align-items-center gap-3">
+              <input type="range" class="form-range" id="years-experience-slider" name="years_experience" min="0" max="30" step="1" value="{{ current_user.years_experience or 5 }}">
+              <span id="years-experience-label" class="fw-semibold text-primary"></span>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h6 class="text-uppercase text-muted small mb-2">Why are you considering a pivot?</h6>
+            <input type="hidden" name="pivot_motivation" id="pivot-motivation" value="{{ current_user.pivot_motivation or '' }}">
+            <div class="row g-3">
+              {% for option in motivation_options %}
+              <div class="col-12 col-md-6">
+                <div class="onboarding-option-card onboarding-option-card-group" data-input="pivot-motivation" data-value="{{ option.value }}">
+                  <div class="d-flex align-items-center gap-3">
+                    <i class="bi {{ option.icon }} fs-5"></i>
+                    <span class="fw-semibold">{{ option.label }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary btn-lg" type="submit">Continue →</button>
+          </div>
+        </form>
+        {% elif step == 2 %}
+        <form method="POST" action="{{ url_for('onboarding.onboarding_step2_save') }}">
+          {{ form.hidden_tag() }}
+          <h2 class="fw-bold mb-2">What is your current role?</h2>
+          <p class="text-muted mb-4">Select the role that best describes what you do today. This powers the skill transfer analysis.</p>
+
+          <div class="mb-3">
+            <input type="text" class="form-control" id="role-search" placeholder="Search roles by title or category..." value="{{ current_category or '' }}">
+            <small class="text-muted" id="role-search-count"></small>
+          </div>
+
+          <input type="hidden" name="current_role_id" id="current_role_id" value="{{ current_user.current_role_id or '' }}">
+          <div class="role-search-list border rounded-3 p-3 mb-3">
+            {% for category, roles in roles_by_category.items() %}
+            <div class="mb-3" data-role-category="{{ category }}">
+              <div class="fw-bold text-uppercase small text-muted mb-2">{{ category }}</div>
+              <div class="list-group">
+                {% for role in roles %}
+                <button type="button" class="list-group-item list-group-item-action role-list-item" data-role-id="{{ role.id }}" data-role-title="{{ role.title }}" data-role-category="{{ role.category }}">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span>{{ role.title }}</span>
+                    <i class="bi bi-check-circle-fill text-primary d-none"></i>
+                  </div>
+                </button>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('onboarding.onboarding_start') }}" class="text-decoration-none"><i class="bi bi-arrow-left"></i> Back</a>
+            <button class="btn btn-primary" type="submit" id="role-continue-btn" disabled>Continue →</button>
+          </div>
+          <div class="mt-3">
+            <a href="{{ url_for('main.contact') }}" class="text-muted">Can't find your role? Tell us.</a>
+          </div>
+        </form>
+        {% else %}
+        <form method="POST" action="{{ url_for('onboarding.onboarding_complete') }}">
+          {{ form.hidden_tag() }}
+          <h2 class="fw-bold mb-2">Almost there! What draws you to PathMap?</h2>
+          <p class="text-muted mb-4">Help us understand your goals so we can surface the most relevant journeys and resources.</p>
+
+          <div class="mb-4">
+            <h6 class="text-uppercase text-muted small mb-2">Which career areas interest you?</h6>
+            <input type="hidden" name="target_interests" id="target-interests" value="{{ session.get('target_interests', '') }}">
+            <div class="row g-3">
+              {% for category in role_categories %}
+              <div class="col-6 col-md-4">
+                <div class="onboarding-option-card onboarding-option-card-group" data-input="target-interests" data-value="{{ category }}" data-multi="true">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-stars"></i>
+                    <span class="fw-semibold">{{ category }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h6 class="text-uppercase text-muted small mb-2">What's your biggest challenge right now?</h6>
+            <input type="hidden" name="biggest_challenge" id="biggest-challenge" value="{{ session.get('onboarding_biggest_challenge', '') }}">
+            {% set challenges = [
+              "I don't know which career to pivot to",
+              "I know where I want to go but don't know how",
+              "I'm worried about the financial risk",
+              "I don't know if my skills are transferable",
+              "I'm afraid of starting over",
+              "I need to see what happened to others like me"
+            ] %}
+            <div class="row g-3">
+              {% for challenge in challenges %}
+              <div class="col-12">
+                <div class="onboarding-option-card onboarding-option-card-group" data-input="biggest-challenge" data-value="{{ challenge }}">
+                  <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-chat-quote fs-5"></i>
+                    <span class="fw-semibold">{{ challenge }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="profile-preview-card p-3 rounded-3 mb-4">
+            {% set role_title = selected_role.title if selected_role else 'your current role' %}
+            {% set category = selected_role.category if selected_role else 'your field' %}
+            {% set years = current_user.years_experience or 0 %}
+            {% set motivation = current_user.pivot_motivation or 'growing your career' %}
+            <div class="fw-bold mb-1">Based on your profile</div>
+            <p class="mb-0">You're a {{ category }} professional with {{ years }} years of experience working as {{ role_title }}. PathMap will help you move forward while honoring your motivation: {{ motivation.replace('_', ' ') }}.</p>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('onboarding.onboarding_step2') }}" class="text-decoration-none"><i class="bi bi-arrow-left"></i> Back</a>
+            <button class="btn btn-primary btn-lg" type="submit">Start My Assessment →</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

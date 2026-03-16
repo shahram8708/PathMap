@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}403 — Access Restricted | PathMap{% endblock %}
+{% block content %}
+<div class="error-page-container">
+  <div class="error-page-card">
+    <div class="error-code-display">403</div>
+    <div class="error-icon-container lock"><i class="bi bi-lock-fill"></i></div>
+    <h2 class="error-heading">Access Restricted</h2>
+    <p class="error-body-text">This area is protected. You may need to sign in, upgrade to Premium, or have admin privileges before you can continue. Choose one of the options below to get where you need to go.</p>
+    <div class="error-actions">
+      <a class="btn btn-primary px-4" href="{{ url_for('dashboard.main_dashboard') }}">Go to Dashboard</a>
+      <a class="text-decoration-none" href="{{ url_for('main.pricing') }}">View Pricing Plans</a>
+      <a class="text-decoration-none" href="{{ url_for('main.index') }}">Go to Homepage</a>
+    </div>
+    <div class="error-help-text mt-3">If you believe this is an error, please contact support@pathmap.in</div>
+  </div>
+</div>
+{% endblock %}

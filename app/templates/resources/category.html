@@ -1,0 +1,59 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('resources.library') }}">Learning Resources</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">{{ category_name }}</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip secondary" href="{{ url_for('resources.library') }}"><i class="bi bi-arrow-left"></i> All Resources</a>
+  <a class="cta-chip" href="{{ url_for('analysis.analysis_hub') }}"><i class="bi bi-diagram-3"></i> Skill Analysis</a>
+  <a class="cta-chip" href="{{ url_for('planner.roadmap_form') }}"><i class="bi bi-map"></i> 90-Day Roadmap</a>
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<h1 class="h4 mb-3">{{ category_name }} Resources</h1>
+<div class="accordion" id="categoryAccordion">
+  {% for skill, res_list in skills_with_resources %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{ loop.index }}">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+        {{ skill.name }} <span class="badge bg-light text-muted ms-2">{{ res_list|length }} resources</span>
+      </button>
+    </h2>
+    <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#categoryAccordion">
+      <div class="accordion-body">
+        <div class="row g-3">
+          {% for res in res_list %}
+          <div class="col-md-6">
+            <div class="resource-card {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %} p-3 h-100">
+              <div class="fw-bold">{{ res.title }}</div>
+              <div class="text-muted small">{{ res.provider }}</div>
+              <div class="d-flex flex-wrap gap-1 my-2">
+                <span class="badge format-badge {{ res.format|lower }}">{{ res.format|capitalize }}</span>
+                <span class="badge cost-badge {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %}">{{ res.cost_tier|capitalize }}</span>
+                <span class="badge bg-light text-muted">~{{ res.estimated_hours }}h</span>
+              </div>
+              <div class="d-flex align-items-center gap-1 mb-2"><i class="bi bi-star-fill star-filled"></i><span class="small fw-semibold">{{ '%.1f'|format(res.quality_rating or 0) }}</span></div>
+              <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ res.url }}">View Resource →</a>
+            </div>
+          </div>
+          {% else %}
+          <div class="col-12"><p class="text-muted mb-0">No resources available for this skill.</p></div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/marketplace.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', function(){ initBookmarkToggle(); });</script>
+{% endblock %}

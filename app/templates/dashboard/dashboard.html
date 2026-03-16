@@ -1,0 +1,280 @@
+{% extends 'dashboard_base.html' %}
+
+{% block breadcrumb %}PathMap / Dashboard{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card dashboard-welcome-card mb-4">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <h4 class="mb-1">Good <span id="dashboard-greeting-time">{{ greeting_time }}</span>, {{ user.first_name or user.display_name }}.</h4>
+            <div class="d-flex align-items-center gap-2 text-muted">
+              <span class="badge bg-light text-primary border">✨ AI</span>
+              <div id="ai-welcome-text" class="markdown-content compact" style="font-style: italic;">{{ (ai_welcome_message or "Welcome back! Let's make a clear move today.") | markdown_force }}</div>
+            </div>
+          </div>
+        </div>
+        {% if active_roadmap and last_checkin_days_ago is not none and last_checkin_days_ago > 7 %}
+        <div class="alert alert-warning mt-3 mb-0">
+          It's been {{ last_checkin_days_ago }} days since your last check-in. Don't lose your streak! <a href="{{ url_for('progress.checkin_form') }}" class="fw-semibold">Log this week →</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mb-4 pathmap-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-clipboard-check text-primary fs-4"></i>
+            <div>
+              <h5 class="mb-0">Career Clarity Assessment</h5>
+              <small class="text-muted">Foundation for your roadmap</small>
+            </div>
+          </div>
+        </div>
+        {% if not assessment %}
+          <div class="d-flex align-items-center gap-3">
+            <div class="display-6 text-primary"><i class="bi bi-emoji-smile"></i></div>
+            <div>
+              <div class="fw-bold">You haven't started your assessment yet.</div>
+              <p class="mb-2 text-muted">Your career profile is the foundation of everything on PathMap. Start here to unlock tailored guidance.</p>
+              <a class="btn btn-primary" href="{{ url_for('assessment.assessment_hub') }}">Begin Assessment →</a>
+            </div>
+          </div>
+        {% elif assessment_progress.percentage < 100 %}
+          <div class="row g-3 align-items-center">
+            <div class="col-md-4 text-center">
+              <svg id="assessment-ring" class="assessment-progress-ring" data-percentage="{{ assessment_progress.percentage|round(0) }}" width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="54" stroke="#e9ecef" stroke-width="12" fill="none"></circle>
+              </svg>
+              <div class="fw-bold mt-2">{{ assessment_progress.completed_count }} of 5 modules complete</div>
+            </div>
+            <div class="col-md-8">
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="assessment-module-pill {% if assessment_progress.values %}complete{% else %}incomplete{% endif %}"><i class="bi {{ 'bi-check-circle-fill' if assessment_progress.values else 'bi-circle' }} me-1"></i> Values</span>
+                <span class="assessment-module-pill {% if assessment_progress.workstyle %}complete{% else %}incomplete{% endif %}"><i class="bi {{ 'bi-check-circle-fill' if assessment_progress.workstyle else 'bi-circle' }} me-1"></i> Workstyle</span>
+                <span class="assessment-module-pill {% if assessment_progress.skills %}complete{% else %}incomplete{% endif %}"><i class="bi {{ 'bi-check-circle-fill' if assessment_progress.skills else 'bi-circle' }} me-1"></i> Skills</span>
+                <span class="assessment-module-pill {% if assessment_progress.constraints %}complete{% else %}incomplete{% endif %}"><i class="bi {{ 'bi-check-circle-fill' if assessment_progress.constraints else 'bi-circle' }} me-1"></i> Constraints</span>
+                <span class="assessment-module-pill {% if assessment_progress.vision %}complete{% else %}incomplete{% endif %}"><i class="bi {{ 'bi-check-circle-fill' if assessment_progress.vision else 'bi-circle' }} me-1"></i> Vision</span>
+              </div>
+              <a class="btn btn-primary" href="{{ next_assessment_url }}">Continue Assessment →</a>
+            </div>
+          </div>
+        {% else %}
+          <div class="d-flex align-items-center gap-3">
+            <div class="text-success fs-4"><i class="bi bi-check-circle-fill"></i></div>
+            <div>
+              <div class="fw-bold">Assessment complete</div>
+              {% set profile = assessment.profile_summary or {} %}
+              <div class="d-flex flex-wrap gap-2 my-2">
+                {% for value in profile.get('top_values', [])[:3] %}
+                  <span class="badge bg-light text-primary border">{{ value }}</span>
+                {% endfor %}
+                {% if profile.get('dominant_style') %}
+                  <span class="badge bg-success text-white">Style: {{ profile.get('dominant_style') }}</span>
+                {% endif %}
+              </div>
+              <a href="{{ url_for('assessment.assessment_results') }}" class="fw-semibold">View Full Profile →</a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mb-4 pathmap-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-map text-primary fs-4"></i>
+            <div>
+              <h5 class="mb-0">Your 90-Day Pivot Plan</h5>
+              <small class="text-muted">Weekly actions to move forward</small>
+            </div>
+          </div>
+        </div>
+        {% if not active_roadmap and (not assessment or assessment_progress.percentage < 100) %}
+          <div class="d-flex gap-3 align-items-center">
+            <i class="bi bi-lock-fill fs-3 text-secondary"></i>
+            <div>
+              <div class="fw-bold">Complete your assessment to unlock your roadmap.</div>
+              <p class="text-muted mb-2">Finish the remaining modules to generate your personalized 90-day plan.</p>
+              <a class="btn btn-primary" href="{{ url_for('assessment.assessment_hub') }}">Finish Assessment →</a>
+            </div>
+          </div>
+        {% elif not active_roadmap %}
+          <div class="d-flex flex-column flex-md-row align-items-start gap-3">
+            <div class="text-primary fs-1"><i class="bi bi-map"></i></div>
+            <div>
+              <div class="fw-bold">Build Your 90-Day Action Plan</div>
+              <p class="text-muted mb-2">Turn your assessment into a weekly plan that balances skill building, networking, and portfolio proof.</p>
+              <a class="btn btn-success" href="{{ url_for('planner.roadmap_form') }}">
+                {% if not user.is_premium %}<i class="bi bi-lock-fill me-1"></i>{% endif %}Generate Roadmap →
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <div class="roadmap-summary-card">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+              <div>
+                <div class="fw-bold">Target role</div>
+                <div class="text-muted">{{ active_roadmap.target_role.title if active_roadmap.target_role else 'Not specified' }}</div>
+              </div>
+              <div class="text-center">
+                <div class="text-uppercase small text-muted">Day</div>
+                <div class="days-counter">{{ days_into_pivot or 0 }} / 90</div>
+              </div>
+              <div class="flex-grow-1 ms-md-3">
+                <div class="small text-muted">Overall progress</div>
+                <div class="progress" style="height: 10px;">
+                  <div class="progress-bar bg-primary" role="progressbar" style="width: {{ overall_progress_pct or 0 }}%;" aria-valuenow="{{ overall_progress_pct or 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="fw-bold mb-2">Week {{ roadmap_current_week or 1 }} Tasks:</div>
+              {% if current_week_tasks %}
+                {% for task in current_week_tasks[:4] %}
+                  <div class="roadmap-task-item">
+                    <div>
+                      <span class="badge task-type-badge {{ task.type }} text-white me-2">{{ task.type|capitalize }}</span>
+                      <span class="fw-semibold">{{ task.title }}</span>
+                      {% if task.estimated_hours %}
+                        <span class="badge bg-light text-dark ms-2">{{ task.estimated_hours }}h</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="text-muted">This week's tasks will appear here once your roadmap is populated.</div>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-3">
+              <a href="{{ url_for('planner.planner_hub') }}" class="fw-semibold">View Full Roadmap →</a>
+              <a href="{{ url_for('progress.checkin_form') }}" class="fw-semibold">Log Weekly Check-In →</a>
+            </div>
+          </div>
+          {% if days_into_pivot is not none and (days_into_pivot in range(27,34) or days_into_pivot in range(57,64) or days_into_pivot >= 87) %}
+          <div class="progress-milestone-callout mt-3 p-3 rounded-3">
+            Day {{ 30 if days_into_pivot < 40 else 60 if days_into_pivot < 80 else 90 }} checkpoint coming up! Time to reflect and adjust your plan.
+          </div>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">Recommended Next Steps</h5>
+      </div>
+      <div class="row g-3">
+        {% for action in quick_actions %}
+        <div class="col-md-6 col-lg-4">
+          <div class="quick-action-card {{ action.color }} p-3 h-100 rounded-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi {{ action.icon }} fs-5"></i>
+              <div class="fw-semibold">{{ action.label }}</div>
+            </div>
+            <p class="text-muted small mb-3">
+              {% if 'Assessment' in action.label %}Finish the remaining modules to unlock tailored guidance.{% elif 'Skill Analysis' in action.label %}Map your skills to new roles and find your strongest pivots.{% elif 'Roadmap' in action.label %}Generate a 90-day plan to make measurable progress.{% elif 'Log This Week' in action.label %}Record this week's wins and obstacles to keep momentum.{% else %}Browse proven career pivots and learn from others.{% endif %}
+            </p>
+            <a class="btn btn-sm btn-outline-primary" href="{{ action.url }}">Go →</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card pathmap-card mb-4">
+      <div class="card-body text-center">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h6 class="mb-0">Your Streak</h6>
+          <i class="bi bi-fire text-warning"></i>
+        </div>
+        <div class="streak-number">{{ streak_count }}</div>
+        <div class="text-muted mb-2">weeks consistent</div>
+        <div class="mb-3 text-muted">
+          {% if streak_count == 0 %}Start your first check-in this week!{% elif streak_count <= 2 %}Great start! Keep the momentum.{% elif streak_count <= 5 %}You're building real consistency.{% else %}Outstanding commitment to your pivot.{% endif %}
+        </div>
+        <div class="text-muted small mb-2">{{ total_checkins }} total check-ins</div>
+        {% if last_checkin_days_ago is not none and last_checkin_days_ago > 6 %}
+          <a class="btn btn-outline-primary btn-sm" href="{{ url_for('progress.checkin_form') }}">Log This Week →</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card pathmap-card mb-4 position-relative">
+      <div class="card-body">
+        <h6 class="mb-3">Platform Stats</h6>
+        <div class="d-flex flex-column gap-3">
+          <div class="stat-mini-item">
+            <i class="bi bi-diagram-3 text-primary me-2"></i>
+            <div>
+              <div class="fw-bold">{{ saved_analyses_count }}</div>
+              <div class="text-muted small">Skill Analyses</div>
+            </div>
+          </div>
+          <div class="stat-mini-item">
+            <i class="bi bi-clipboard-check text-success me-2"></i>
+            <div>
+              <div class="fw-bold">{{ assessment_progress.percentage|round(0) if assessment_progress else 0 }}%</div>
+              <div class="text-muted small">Assessment Progress</div>
+            </div>
+          </div>
+          <div class="stat-mini-item">
+            <i class="bi bi-calendar text-secondary me-2"></i>
+            <div>
+              <div class="fw-bold">{{ days_since_joining }}</div>
+              <div class="text-muted small">Days Since Joining</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pathmap-card mb-4">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h6 class="mb-0">Ask PathMap AI</h6>
+          <i class="bi bi-robot text-primary"></i>
+        </div>
+        <p class="text-muted small mb-3">Get personalized career pivot guidance powered by AI.</p>
+        <div class="input-group mb-2">
+          <input type="text" class="form-control" id="ai-question-input" placeholder="Ask a question about your career pivot...">
+          <button class="btn btn-primary" type="button" id="ai-send-btn">Send</button>
+        </div>
+        <div class="ai-widget-loading d-none mb-2">Thinking<span class="dots">...</span></div>
+        <div class="ai-widget-response markdown-content compact d-none"></div>
+        <div class="premium-overlay d-none" id="ai-premium-overlay">
+          <div class="p-3 rounded-3 bg-light border">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-lock-fill text-warning"></i>
+              <div>Upgrade to Premium for unlimited AI insights.</div>
+            </div>
+            <a class="btn btn-sm btn-warning mt-2" href="{{ url_for('main.pricing') }}">Upgrade ₹1,499/month →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if not user.is_premium %}
+    <div class="card mb-4" style="background: linear-gradient(135deg, #0D1B2A, #2E86C1); color: #fff;">
+      <div class="card-body">
+        <div class="fw-bold mb-1">Unlock Your Full Potential</div>
+        <p class="mb-3 text-light">Premium gives you decision frameworks, unlimited AI insights, and roadmap generation.</p>
+        <ul class="mb-3 ps-3 small">
+          <li>Premium-only pivot planner</li>
+          <li>Unlimited AI career insights</li>
+          <li>Full access to career journeys</li>
+        </ul>
+        <a class="btn btn-warning w-100" href="{{ url_for('main.pricing') }}">Upgrade for ₹1,499/month →</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

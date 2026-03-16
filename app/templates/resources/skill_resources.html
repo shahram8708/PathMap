@@ -1,0 +1,91 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('resources.library') }}">Learning Resources</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">{{ skill.name }}</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip secondary" href="{{ url_for('resources.library') }}"><i class="bi bi-arrow-left"></i> All Resources</a>
+  <a class="cta-chip" href="{{ url_for('analysis.analysis_hub') }}"><i class="bi bi-diagram-3"></i> Skill Analysis</a>
+  <a class="cta-chip" href="{{ url_for('planner.planner_hub') }}"><i class="bi bi-compass"></i> Planner</a>
+  {% if is_gap_skill %}
+    <span class="cta-chip premium secondary"><i class="bi bi-exclamation-circle"></i> Gap Skill</span>
+  {% endif %}
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h4 mb-1">{{ skill.name }}</h1>
+    <div class="text-muted">Category: {{ skill.category }}</div>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('resources.library') }}">← Back to Resource Library</a>
+</div>
+
+{% if is_gap_skill %}
+<div class="alert alert-warning mb-3">This is a skill gap in your career pivot analysis. Importance: {{ 'High' if gap_importance and gap_importance >= 0.7 else 'Medium' if gap_importance and gap_importance >= 0.4 else 'Low' }}. Completing these resources will improve your Feasibility Score.</div>
+{% endif %}
+{% if user_skill_rating is not none %}
+<div class="skill-confidence-indicator mb-3">Your current self-rated confidence: {{ user_skill_rating }}</div>
+{% endif %}
+
+<div class="row g-3">
+  {% for res in resources %}
+  <div class="col-12">
+    <div class="resource-card {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %} p-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="fw-bold h6 mb-1">{{ res.title }}</div>
+          <div class="text-muted small mb-1">{{ res.provider }}</div>
+          <div class="small text-muted">{{ res.skill.description or '' }}</div>
+        </div>
+        <button class="btn btn-sm resource-bookmark-btn {% if res.bookmarks|selectattr('user_id','equalto', current_user.id)|list %}bookmarked{% endif %}" data-resource-id="{{ res.id }}" aria-label="Bookmark">
+          <i class="bi {% if res.bookmarks|selectattr('user_id','equalto', current_user.id)|list %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i>
+        </button>
+      </div>
+      <div class="d-flex flex-wrap gap-1 my-2">
+        <span class="badge format-badge {{ res.format|lower }}">{{ res.format|capitalize }}</span>
+        <span class="badge cost-badge {% if res.cost_tier|lower == 'free' %}free{% elif res.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %}">{{ res.cost_tier|capitalize }}</span>
+        <span class="badge bg-light text-muted">~{{ res.estimated_hours }}h</span>
+      </div>
+      <div class="d-flex align-items-center gap-1 mb-2"><i class="bi bi-star-fill star-filled"></i><span class="small fw-semibold">{{ '%.1f'|format(res.quality_rating or 0) }}</span></div>
+      <p class="text-muted mb-3">{{ res.skill.description or 'Deepen this skill to strengthen your pivot feasibility.' }}</p>
+      <div class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ res.url }}">View Resource →</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not is_premium and all_count > 2 %}
+<div class="premium-resource-overlay card p-3 mt-3">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <div class="fw-bold">Showing 2 of {{ all_count }} resources</div>
+      <div class="text-muted small">Upgrade to PathMap Premium to see all resources for this skill.</div>
+    </div>
+    <a class="btn btn-warning" href="{{ url_for('main.pricing') }}">Upgrade ₹1,499/month →</a>
+  </div>
+</div>
+{% endif %}
+
+<div class="card border-0 shadow-sm p-3 mt-4">
+  <h6>Other skills in {{ skill.category }}</h6>
+  <div class="d-flex flex-wrap gap-2">
+    {% for other_skill in related_skills %}
+      <a class="btn btn-sm btn-light" href="{{ url_for('resources.skill_resources', skill_id=other_skill.id) }}">{{ other_skill.name }}</a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/marketplace.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', function() { initBookmarkToggle(); });</script>
+{% endblock %}

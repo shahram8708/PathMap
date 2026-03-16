@@ -1,0 +1,98 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}Dashboard / Progress Tracker / Reflection Journal{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h3 mb-1"><i class="bi bi-journal-richtext me-2"></i>Reflection Journal</h1>
+    <p class="text-muted mb-0">Your private reflections. Writing about your progress and obstacles is one of the most effective tools for maintaining pivot momentum.</p>
+    <div class="small text-muted">{{ total_with_reflections }} reflections recorded</div>
+  </div>
+</div>
+
+<div class="mb-3">
+  <input type="text" id="journal-search" class="form-control" placeholder="Search reflections" aria-label="Search reflections">
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    {% if not entries %}
+      <div class="card p-4 text-center">
+        <div class="display-4 text-muted">📝</div>
+        <p class="mb-2">You haven't written any reflections yet. Reflections are optional in your weekly check-in, but the most successful PathMap users report that regular reflection was their most valuable habit.</p>
+        <a class="btn btn-primary" href="{{ url_for('progress.checkin_form') }}">Log Your First Check-In →</a>
+      </div>
+    {% else %}
+      {% for entry in entries %}
+        <div class="journal-entry-card mb-3" data-reflection-text="{{ entry.reflection|e }}">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="fw-bold">{{ entry.entry_date.strftime('%A, %d %B %Y') }}</div>
+            <span class="badge bg-secondary">Week {{ (entry.entry_date - entry.roadmap.start_date).days // 7 + 1 if entry.roadmap else '-' }}</span>
+            {% if entry.mood_rating %}
+              <span class="badge bg-light text-dark">{{ '😞' if entry.mood_rating == 1 else '😕' if entry.mood_rating == 2 else '😐' if entry.mood_rating == 3 else '🙂' if entry.mood_rating == 4 else '😊' }}</span>
+            {% endif %}
+          </div>
+          <div class="mb-2" style="line-height:1.7;">{{ entry.reflection }}</div>
+          {% if entry.obstacles_noted %}
+            <div class="alert alert-warning py-2 px-3 mb-0"><strong>Obstacle noted:</strong> {{ entry.obstacles_noted }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <nav aria-label="Journal pagination">
+        <ul class="pagination">
+          {% if pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('progress.journal_view', page=pagination.prev_num) }}">Previous</a></li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          {% endif %}
+          <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span></li>
+          {% if pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('progress.journal_view', page=pagination.next_num) }}">Next</a></li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4 d-none d-lg-block">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h6 class="mb-3">Mood distribution</h6>
+        {% for mood, count in mood_distribution.items() %}
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span style="width:24px;">{{ '😞' if mood == 1 else '😕' if mood == 2 else '😐' if mood == 3 else '🙂' if mood == 4 else '😊' }}</span>
+            <div class="flex-grow-1">
+              <div class="progress" style="height:8px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ (count / total_with_reflections * 100) if total_with_reflections else 0 }}%; background: {{ '#C0392B' if mood == 1 else '#E67E22' if mood == 2 else '#F0B429' if mood == 3 else '#27AE60' if mood == 4 else '#1A5276' }}"></div>
+              </div>
+            </div>
+            <span class="small text-muted">{{ count }}</span>
+          </div>
+        {% endfor %}
+        <div class="mt-2 text-muted small">Most common mood: {{ most_common_mood_label or 'N/A' }}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-2"><strong>First entry:</strong> {{ entries[-1].entry_date.strftime('%b %d, %Y') if entries else '—' }}</div>
+        <div class="mb-2"><strong>Most recent:</strong> {{ entries[0].entry_date.strftime('%b %d, %Y') if entries else '—' }}</div>
+        {% if current_user.is_premium %}
+          <a href="{{ url_for('progress.export_progress') }}" class="small">Export Journal (Premium)</a>
+        {% else %}
+          <span class="small text-muted">Export Journal (Premium)</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    initJourneySearchFilter();
+  });
+</script>
+{% endblock %}

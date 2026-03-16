@@ -1,0 +1,193 @@
+{% if current_user.is_authenticated %}{% extends 'dashboard_base.html' %}{% else %}{% extends 'base.html' %}{% endif %}
+{% block breadcrumb %}{% if current_user.is_authenticated %}Dashboard / Career Journeys{% endif %}{% endblock %}
+{% block dashboard_content %}
+<div class="antisurvivor-notice p-3 mb-3">
+  <strong>PathMap shows all outcomes.</strong> PathMap's journey database includes completed transitions, in-progress pivots, AND reversed decisions. Reversed journeys are equally valuable — understanding why pivots fail helps you make better decisions. We do not hide failures.
+</div>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h3 mb-1">Career Pivot Journey Explorer</h1>
+    <p class="text-muted mb-0">Real, structured, anonymized accounts from professionals who made career pivots. Filter by your starting point and target.</p>
+  </div>
+</div>
+
+{% if views_remaining is not none and not is_premium %}
+  {% if views_remaining > 0 %}
+    <div class="journey-views-banner p-3 mb-3">Free account: {{ views_remaining }} journey views remaining this month. Upgrade to Premium for unlimited access.</div>
+  {% else %}
+    <div class="no-views-banner p-3 mb-3">You have used all 5 free journey views this month. Upgrade to Premium to continue reading. Views reset on the 1st of each month.</div>
+  {% endif %}
+{% endif %}
+
+<div class="row g-4 mb-3">
+  <div class="col-12">
+    <div class="d-flex flex-wrap gap-3">
+      <div class="p-3 border rounded-3 bg-white flex-grow-1">{{ global_stats.total_journeys }} real journeys</div>
+      <div class="p-3 border rounded-3 bg-white flex-grow-1">{{ global_stats.unique_origin_roles }}+ starting roles</div>
+      <div class="p-3 border rounded-3 bg-white flex-grow-1">{{ '%.0f'|format(global_stats.avg_timeline_months) }} months median timeline</div>
+      <div class="p-3 border rounded-3 bg-white flex-grow-1">{{ '%.0f'|format(global_stats.reversed_pct) }}% reversed (shown honestly)</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-3">
+    <div class="journey-filter-panel p-3" id="journey-filter-loading">
+      <h6 class="mb-3"><i class="bi bi-funnel me-2"></i>Filter Journeys</h6>
+      <form id="journey-filter-form" method="GET">
+        <div class="mb-3">
+          <label class="form-label">From Role</label>
+          <select class="form-select" name="from_role_id">
+            <option value="">Any role</option>
+            {% for role in all_roles %}
+              <option value="{{ role.id }}" {% if active_filters.from_role_id == role.id %}selected{% endif %}>{{ role.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">To Role</label>
+          <select class="form-select" name="to_role_id">
+            <option value="">Any role</option>
+            {% for role in all_roles %}
+              <option value="{{ role.id }}" {% if active_filters.to_role_id == role.id %}selected{% endif %}>{{ role.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Outcome</label>
+          <div class="d-grid gap-2">
+            {% for val,label,class_name in [('all','All','secondary'),('completed','Completed','success'),('in_progress','In Progress','primary'),('reversed','Reversed','warning')] %}
+              <label class="btn btn-outline-{{ class_name }} mb-0">
+                <input type="radio" name="outcome" value="{{ val }}" class="me-1" {% if active_filters.outcome == val %}checked{% endif %}> {{ label }}
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Region</label>
+          <select class="form-select" name="region">
+            <option value="">Any region</option>
+            {% for region in all_regions %}
+              <option value="{{ region }}" {% if active_filters.region == region %}selected{% endif %}>{{ region }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Experience</label>
+          <div class="d-flex gap-2">
+            <input type="number" class="form-control" name="experience_min" placeholder="Min" value="{{ active_filters.experience_min or '' }}">
+            <input type="number" class="form-control" name="experience_max" placeholder="Max" value="{{ active_filters.experience_max or '' }}">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Timeline (max months)</label>
+          <select class="form-select" name="timeline_max">
+            <option value="">Any</option>
+            {% for val,label in [(3,'3 months'),(6,'6 months'),(12,'12 months'),(18,'18 months'),(24,'24+ months')] %}
+              <option value="{{ val }}" {% if active_filters.timeline_max == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Sort by</label>
+          <select class="form-select" name="sort_by">
+            <option value="recent" {% if active_filters.sort_by == 'recent' %}selected{% endif %}>Most Recent</option>
+            <option value="timeline_shortest" {% if active_filters.sort_by == 'timeline_shortest' %}selected{% endif %}>Shortest Timeline</option>
+            <option value="income_highest" {% if active_filters.sort_by == 'income_highest' %}selected{% endif %}>Highest Income</option>
+            <option value="most_viewed" {% if active_filters.sort_by == 'most_viewed' %}selected{% endif %}>Most Viewed</option>
+          </select>
+        </div>
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-primary">Apply Filters</button>
+          <button id="journey-filter-clear" class="btn btn-outline-secondary" type="button">Clear Filters</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-9">
+    <div class="aggregate-stats-grid mb-3">
+      <div class="p-3 bg-white border rounded-3">Matching Journeys: <strong>{{ aggregate_stats.total_count }}</strong></div>
+      <div class="p-3 bg-white border rounded-3 text-success">Completed: <strong>{{ aggregate_stats.completed_count }}</strong> ({{ (aggregate_stats.completed_count / aggregate_stats.total_count * 100)|round(0) if aggregate_stats.total_count else 0 }}%)</div>
+      <div class="p-3 bg-white border rounded-3 text-primary">In Progress: <strong>{{ aggregate_stats.in_progress_count }}</strong></div>
+      <div class="p-3 bg-white border rounded-3 text-warning">Reversed: <strong>{{ aggregate_stats.reversed_count }}</strong> ({{ (aggregate_stats.reversed_count / aggregate_stats.total_count * 100)|round(0) if aggregate_stats.total_count else 0 }}%)</div>
+      <div class="p-3 bg-white border rounded-3">Median Timeline: <strong>{{ aggregate_stats.median_timeline or '—' }} months</strong></div>
+      <div class="p-3 bg-white border rounded-3">Avg Income Change: <strong>{{ ('%+ .0f' % aggregate_stats.avg_income_change).strip() + '%' if aggregate_stats.avg_income_change is not none else 'N/A' }}</strong></div>
+    </div>
+
+    {% if not journeys %}
+      <div class="alert alert-info">No journeys match your current filters. Try broadening your search or clearing some filters.</div>
+    {% else %}
+      <div class="row g-3">
+        {% for journey in journeys %}
+          <div class="col-md-6">
+            <div class="journey-card p-3 h-100">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="fw-semibold">From {{ journey.origin_role.title if journey.origin_role else 'Role' }} → {{ journey.target_role.title if journey.target_role else 'Role' }}</div>
+                <span class="badge outcome-badge {{ journey.outcome_status }}">{{ 'Completed' if journey.outcome_status=='completed' else 'In Progress' if journey.outcome_status=='in_progress' else 'Reversed' }}</span>
+              </div>
+              <div class="d-flex flex-wrap gap-2 mb-2 small">
+                <span class="badge bg-light text-dark"><i class="bi bi-clock-history me-1"></i>{{ journey.timeline_months }} months</span>
+                <span class="badge bg-light text-dark"><i class="bi bi-briefcase me-1"></i>{{ journey.experience_at_pivot }} yrs exp</span>
+                {% set income_class = 'positive' if journey.income_change_pct > 0 else 'negative' if journey.income_change_pct < 0 else 'neutral' %}
+                <span class="badge income-badge {{ income_class }}">{{ '%+.0f'|format(journey.income_change_pct or 0) }}% income at 12mo</span>
+                <span class="badge bg-light text-dark">{{ journey.geographic_region }}</span>
+              </div>
+              <div class="markdown-content compact text-muted">{{ journey.summary | default('') | markdown | striptags | truncate(100, True, '…') }}</div>
+              <div class="d-flex align-items-center justify-content-between small text-muted">
+                <span>{{ journey.pseudonym or 'Anonymous' }}</span>
+                <span>{{ journey.published_at.strftime('%b %d, %Y') if journey.published_at else 'Unpublished' }}</span>
+                <span><i class="bi bi-eye"></i> {{ journey.view_count }}</span>
+              </div>
+              <div class="mt-2">
+                {% if not current_user.is_authenticated %}
+                  <a class="btn btn-outline-primary w-100" href="{{ url_for('auth.signup') }}">Create free account to read</a>
+                {% else %}
+                  {% set locked = (views_remaining is not none and views_remaining == 0 and journey.id not in viewed_ids and not is_premium) %}
+                  {% if locked %}
+                    <button class="btn btn-secondary w-100" data-locked-journey="true" title="Upgrade for unlimited access">Read Full Journey →</button>
+                  {% else %}
+                    <a class="btn btn-primary w-100" href="{{ url_for('journeys.journey_detail', journey_id=journey.id) }}">Read Full Journey →</a>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% set pagination_args = pagination_args | default({}) %}
+      <nav aria-label="Journeys pagination" class="mt-3">
+        <ul class="pagination">
+          {% if pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('journeys.explorer', page=pagination.prev_num, **pagination_args) }}">Previous</a></li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          {% endif %}
+          <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span></li>
+          {% if pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('journeys.explorer', page=pagination.next_num, **pagination_args) }}">Next</a></li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+
+    <div class="card mt-4">
+      <div class="card-body d-flex flex-wrap align-items-center justify-content-between">
+        <div>
+          <h5 class="mb-1">Share your pivot story</h5>
+          <div class="text-muted">Have you made a career pivot? Share your experience — including what worked and what didn't. Your story helps others make better decisions.</div>
+        </div>
+        <a class="btn btn-primary" href="{{ url_for('journeys.submit_journey_form') if current_user.is_authenticated else url_for('auth.signup') }}">Submit Your Journey →</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>document.addEventListener('DOMContentLoaded', initJourneyFilter);</script>
+{% endblock %}

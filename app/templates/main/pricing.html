@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Pricing{% endblock %}
+{% block content %}
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <h1 class="fw-bold">Pricing</h1>
+    <p class="text-muted">Designed to be accessible globally. Upgrade only when you're ready.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-card p-4 h-100">
+          <h5 class="fw-bold">Free</h5>
+          <p class="text-muted">₹0</p>
+          <ul class="list-unstyled mb-4">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Career Assessment</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>1 Skill Analysis/month</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>5 Journeys/month</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Basic Progress Tracker</li>
+            <li class="mb-2 text-muted"><i class="bi bi-x-circle text-muted me-2"></i>Decision Framework</li>
+            <li class="mb-2 text-muted"><i class="bi bi-x-circle text-muted me-2"></i>90-Day Roadmap</li>
+          </ul>
+          {% if current_user.is_authenticated and current_user.is_premium %}
+            <button class="btn btn-outline-secondary w-100" disabled>Included in Premium</button>
+          {% else %}
+            <a class="btn btn-pathmap-outline w-100" href="{{ url_for('auth.signup') }}">Get Started Free</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-card popular p-4 h-100 position-relative">
+          <span class="popular-badge">Best Value</span>
+          <h5 class="fw-bold">Premium Monthly</h5>
+          <p class="text-muted">₹{{ monthly_amount_paise // 100 }}/month</p>
+          <ul class="list-unstyled mb-4">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Everything in Free</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Unlimited Analyses</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Unlimited Journeys</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Decision Framework</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>90-Day Roadmap</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Session Marketplace</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>AI Career Advisor</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>PDF Downloads</li>
+          </ul>
+          {% if current_user.is_authenticated and current_user.is_premium %}
+            <div class="alert alert-success">You are on Premium — manage your subscription in settings.</div>
+          {% elif current_user.is_authenticated %}
+            <button class="btn btn-pathmap-primary w-100" type="button" onclick="initiateMonthlyCheckout()">Start Premium Monthly</button>
+          {% else %}
+            <button class="btn btn-pathmap-primary w-100" type="button" onclick="window.location.href='{{ url_for('auth.signup', next='/pricing') }}'">Start Premium Monthly</button>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6">
+        <div class="pricing-card p-4 h-100">
+          <h5 class="fw-bold">Premium Annual</h5>
+          <p class="text-muted">₹{{ annual_amount_paise // 100 }} / year <span class="badge bg-success ms-2">Save 33%</span></p>
+          <ul class="list-unstyled mb-4">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>All Premium Monthly features</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Priority support</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Annual benchmarking review</li>
+          </ul>
+          {% if current_user.is_authenticated and current_user.is_premium %}
+            <div class="alert alert-success">You are on Premium — manage your subscription in settings.</div>
+          {% elif current_user.is_authenticated %}
+            <button class="btn btn-pathmap-outline w-100" type="button" onclick="initiateAnnualCheckout()">Start Premium Annual</button>
+          {% else %}
+            <button class="btn btn-pathmap-outline w-100" type="button" onclick="window.location.href='{{ url_for('auth.signup', next='/pricing') }}'">Start Premium Annual</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <div class="pathmap-card p-4">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h4 class="fw-bold">For Teams & Organizations</h4>
+          <p class="mb-1">₹8,000–₹25,000/month depending on seats and live facilitation needs.</p>
+          <p class="text-muted mb-0">Designed for HR and L&D teams rolling out structured career mobility programs, with analytics and cohort-level support.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+          <a class="btn btn-pathmap-primary" href="{{ url_for('main.contact') }}?type=teams">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <h3 class="fw-bold mb-4">Feature Comparison</h3>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            <th scope="col">Free</th>
+            <th scope="col">Premium</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set comparison = [
+            'Career Assessment',
+            'Skill Transfer Analyzer',
+            'Journey Explorer',
+            'Feasibility Scoring',
+            'Decision Framework',
+            '90-Day Roadmap',
+            'Progress Tracker',
+            'Shadow Sessions',
+            'Resource Linker',
+            'PDF Downloads'
+          ] %}
+          {% set free_features = ['Career Assessment', 'Skill Transfer Analyzer', 'Journey Explorer', 'Progress Tracker'] %}
+          {% for item in comparison %}
+          <tr>
+            <td>{{ item }}</td>
+            <td>{% if item in free_features %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle text-muted"></i>{% endif %}</td>
+            <td><i class="bi bi-check-circle-fill text-success"></i></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <h3 class="fw-bold mb-4">FAQ</h3>
+    <div class="accordion" id="faqAccordion">
+      {% set faqs = [
+        {'q':'Can I cancel anytime?','a':'Yes. Subscriptions are month-to-month or annual via Razorpay. Cancel anytime from settings and you will retain access until the billing period ends.'},
+        {'q':'Is my data private?','a':'Yes. We store only what we need to provide the service. Payment data stays with Razorpay. Assessment data is encrypted and never sold.'},
+        {'q':'What happens to my data on the Free plan?','a':'Your assessment, journeys viewed, and progress remain accessible. Premium-only features are locked but your data is preserved.'},
+        {'q':'Is there a student discount?','a':'Yes. Reach out via contact form with a valid student email for a 30% discount on Premium.'},
+        {'q':'Do you offer refunds?','a':'We offer a 7-day money-back guarantee on your first subscription. After that, cancellations stop future renewals.'}
+      ] %}
+      {% for item in faqs %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="faq-{{ loop.index }}">
+          <button class="accordion-button {{ 'collapsed' if not loop.first }}" type="button" data-bs-toggle="collapse" data-bs-target="#faq-collapse-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="faq-collapse-{{ loop.index }}">
+            {{ item.q }}
+          </button>
+        </h2>
+        <div id="faq-collapse-{{ loop.index }}" class="accordion-collapse collapse {{ 'show' if loop.first }}" aria-labelledby="faq-{{ loop.index }}" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">{{ item.a }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>
+  const RAZORPAY_KEY_ID = "{{ razorpay_key_id }}";
+  const USER_AUTHENTICATED = {{ 'true' if current_user.is_authenticated else 'false' }};
+  const USER_PREMIUM = {{ 'true' if current_user.is_authenticated and current_user.is_premium else 'false' }};
+</script>
+{% endblock %}

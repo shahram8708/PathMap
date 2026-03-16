@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% macro sidebar_content(assessment_progress, streak_count) %}
+  {% set completed = 0 %}
+  {% if assessment_progress %}
+    {% set completed = assessment_progress.get('completed_count', assessment_progress.get('completed', assessment_progress.get('count', 0))) %}
+  {% elif current_assessment_progress is defined %}
+    {% set completed = current_assessment_progress %}
+  {% endif %}
+  {% set assessment_badge = '✓' if completed == 5 else completed|string ~ '/5' %}
+  {% set endpoint = request.endpoint or '' %}
+  {% set planner_active = endpoint.startswith('planner.') %}
+  {% set progress_active = endpoint.startswith('progress.') %}
+  {% set assessment_active = endpoint.startswith('assessment.') %}
+  {% set analysis_active = endpoint.startswith('analysis.') %}
+  {% set sessions_active = endpoint.startswith('sessions.') %}
+  {% set journeys_active = endpoint.startswith('journeys.') %}
+  {% set resources_active = endpoint.startswith('resources.') %}
+  {% set profile_active = endpoint.startswith('profile.') %}
+  {% set dashboard_active = endpoint == 'dashboard.main_dashboard' %}
+  {% set streak_val = current_streak if current_streak is defined else streak_count %}
+
+  <div class="d-flex align-items-center gap-3 px-3 pt-2 pb-3 sidebar-user-block">
+    <div class="avatar-circle" style="width:48px;height:48px;font-size:1.1rem;">
+      {{ (current_user.first_name or current_user.display_name)[0]|upper }}
+    </div>
+    <div>
+      <div class="fw-bold text-dark">{{ current_user.first_name or current_user.display_name }}</div>
+      <span class="badge {{ 'bg-success' if current_user.is_premium else 'bg-secondary' }}">{{ 'Premium' if current_user.is_premium else 'Free' }}</span>
+    </div>
+  </div>
+
+  <div class="px-2">
+    <div class="nav-section-label">Explore</div>
+    <a class="nav-link sidebar-link {{ 'active' if dashboard_active else '' }}" href="{{ url_for('dashboard.main_dashboard') }}">
+      <i class="bi bi-house me-2"></i> Dashboard
+    </a>
+    <a class="nav-link sidebar-link {{ 'active' if journeys_active else '' }}" href="{{ url_for('journeys.explorer') }}">
+      <i class="bi bi-journal-richtext me-2"></i> Journeys
+    </a>
+    <a class="nav-link sidebar-link {{ 'active' if sessions_active else '' }}" href="{{ url_for('sessions.marketplace') }}">
+      <i class="bi bi-people me-2"></i> Sessions
+    </a>
+    <a class="nav-link sidebar-link {{ 'active' if resources_active else '' }}" href="{{ url_for('resources.library') }}">
+      <i class="bi bi-book me-2"></i> Resource
+    </a>
+  </div>
+
+  <div class="px-2 mt-3">
+    <div class="nav-section-label">Plan & Decide</div>
+    <a class="nav-link sidebar-link {{ 'active' if assessment_active else '' }}" href="{{ url_for('assessment.assessment_hub') }}">
+      <i class="bi bi-clipboard-check me-2"></i>
+      Assessment
+      <span class="sidebar-badge ms-auto">{{ assessment_badge }}</span>
+    </a>
+    <a class="nav-link sidebar-link {{ 'active' if analysis_active else '' }}" href="{{ url_for('analysis.analysis_hub') }}">
+      <i class="bi bi-diagram-3 me-2"></i> Skill
+    </a>
+    <button class="nav-link sidebar-link nav-link-parent {{ 'active' if planner_active else '' }}" type="button" data-submenu-toggle="submenu-planner" aria-expanded="{{ 'true' if planner_active else 'false' }}" aria-controls="submenu-planner">
+      <span class="d-flex align-items-center gap-2">
+        <i class="bi bi-compass"></i> Planner
+      </span>
+      {% if not current_user.is_premium %}
+        <span class="sidebar-pill">Premium</span>
+      {% endif %}
+      <i class="bi bi-chevron-down ms-1 submenu-caret"></i>
+    </button>
+    <div class="sidebar-submenu collapse {{ 'show' if planner_active else '' }}" id="submenu-planner">
+      <a class="nav-sublink {{ 'active' if endpoint == 'planner.planner_hub' else '' }}" href="{{ url_for('planner.planner_hub') }}">
+        <span>Planner Hub</span>
+      </a>
+      <a class="nav-sublink {{ 'active' if endpoint.startswith('planner.decision_') else '' }}" href="{{ url_for('planner.decision_framework') }}">
+        <span>Framework</span>
+        <span class="sidebar-pill">Premium</span>
+      </a>
+      <a class="nav-sublink {{ 'active' if endpoint in ['planner.roadmap_form', 'planner.roadmap_detail', 'planner.generate_roadmap'] else '' }}" href="{{ url_for('planner.roadmap_form') }}">
+        <span>Roadmap</span>
+        <span class="sidebar-pill">Premium</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="px-2 mt-3">
+    <div class="nav-section-label">Track</div>
+    <a class="nav-link sidebar-link {{ 'active' if progress_active else '' }}" href="{{ url_for('progress.progress_dashboard') }}">
+      <i class="bi bi-graph-up me-2"></i> Progress
+      {% if streak_val and streak_val > 0 %}
+        <span class="sidebar-badge streak-mini-badge ms-auto">🔥 {{ streak_val }}</span>
+      {% endif %}
+    </a>
+    <a class="nav-link sidebar-link {{ 'active' if endpoint == 'progress.checkin_form' else '' }}" href="{{ url_for('progress.checkin_form') }}">
+      <i class="bi bi-journal-check me-2"></i> Check-in
+    </a>
+  </div>
+
+  <div class="px-2 mt-3">
+    <div class="nav-section-label">Account</div>
+    <a class="nav-link sidebar-link {{ 'active' if profile_active and endpoint == 'profile.profile_page' else '' }}" href="{{ url_for('profile.profile_page') }}">
+      <i class="bi bi-person me-2"></i> Profile
+    </a>
+    <a class="nav-link sidebar-link {{ 'active' if endpoint == 'profile.settings_page' else '' }}" href="{{ url_for('profile.settings_page') }}">
+      <i class="bi bi-gear me-2"></i> Settings
+    </a>
+    <a class="nav-link sidebar-link {{ 'active' if endpoint == 'profile.billing_page' else '' }}" href="{{ url_for('profile.billing_page') }}">
+      <i class="bi bi-credit-card me-2"></i> Billing
+    </a>
+  </div>
+
+  {% if not current_user.is_premium %}
+  <div class="px-3 mt-auto pb-3">
+    <div class="sidebar-upgrade-card p-3 rounded-3 text-white">
+      <div class="fw-bold">Unlock all tools</div>
+      <div class="small">₹1,499/month</div>
+      <a class="btn btn-sm btn-warning mt-2 w-100" href="{{ url_for('main.pricing') }}">Upgrade Now →</a>
+    </div>
+  </div>
+  {% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row dashboard-layout">
+    <div class="col-lg-3 col-xl-2 d-none d-lg-flex flex-column sidebar-nav">
+      {{ sidebar_content(assessment_progress if assessment_progress is defined else {}, streak_count if streak_count is defined else 0) }}
+    </div>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+      <div class="offcanvas-header">
+        <h6 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body p-0">
+        <div class="sidebar-nav h-100">
+          {{ sidebar_content(assessment_progress if assessment_progress is defined else {}, streak_count if streak_count is defined else 0) }}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-9 col-xl-10 dashboard-main">
+      <div class="d-flex align-items-center justify-content-between py-3 px-3 px-lg-0 breadcrumb-sticky" data-breadcrumb-bar>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+            <i class="bi bi-list"></i>
+          </button>
+          <div class="breadcrumb-bar">
+            {% block breadcrumb %}{% endblock %}
+          </div>
+        </div>
+        {% block breadcrumb_actions %}{% endblock %}
+      </div>
+      <div class="px-3 px-lg-0 pb-5">
+        {% block dashboard_content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

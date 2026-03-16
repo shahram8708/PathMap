@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container py-5">
+    <div class="row align-items-center gy-4">
+      <div class="col-lg-6">
+        <div class="hero-card mb-3 animate-on-scroll">
+          <small class="text-uppercase text-white-50">Career pivot clarity</small>
+          <h1 class="hero-headline mt-2">Stop researching careers. Start deciding.</h1>
+          <p class="hero-subheadline">PathMap gives you real data from people who made your exact career change — and a structured plan to follow the same path.</p>
+          <form id="hero-role-form" class="hero-form mt-3">
+            <label class="text-white-50 mb-2">What is your current role?</label>
+            <div class="d-flex flex-column flex-md-row gap-2">
+              <input id="hero-role-input" name="role" class="form-control" placeholder="e.g. Marketing Manager" list="featured-roles">
+              <datalist id="featured-roles">
+                {% for role in featured_roles %}
+                <option value="{{ role }}">{{ role }}</option>
+                {% endfor %}
+              </datalist>
+              <button class="btn btn-light fw-bold px-4" type="submit">Start Free Assessment →</button>
+            </div>
+          </form>
+          <div class="d-flex align-items-center gap-2 text-white-50 small mt-3 flex-wrap">
+            <span>✓ Free to start</span><span>✓ No credit card required</span><span>✓ Join 12,000+ professionals</span>
+          </div>
+          <div class="d-flex flex-wrap gap-3 mt-4">
+            <a class="btn btn-light fw-bold text-primary" href="{{ url_for('auth.signup') }}">Start Free Assessment</a>
+            <a class="btn btn-outline-light" href="{{ url_for('journeys.explorer') }}">Browse Real Career Journeys</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 text-center animate-on-scroll">
+        <svg class="hero-illustration" viewBox="0 0 480 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60 300 C140 220 180 220 240 150 C300 80 340 110 400 60" stroke="#AED6F1" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <circle cx="60" cy="300" r="12" fill="#2E86C1" />
+          <circle cx="160" cy="210" r="10" fill="#1A5276" />
+          <circle cx="240" cy="150" r="12" fill="#AED6F1" stroke="#2E86C1" stroke-width="3" />
+          <circle cx="320" cy="110" r="10" fill="#2E86C1" />
+          <circle cx="400" cy="60" r="12" fill="#1A5276" />
+          <rect x="120" y="40" width="200" height="110" rx="14" fill="rgba(255,255,255,0.08)" stroke="#AED6F1" stroke-width="2" />
+          <path d="M140 80 h160" stroke="#AED6F1" stroke-width="4" stroke-linecap="round" />
+          <path d="M140 100 h120" stroke="#2E86C1" stroke-width="4" stroke-linecap="round" />
+          <path d="M140 120 h90" stroke="#AED6F1" stroke-width="4" stroke-linecap="round" />
+          <rect x="260" y="220" width="140" height="90" rx="16" fill="rgba(255,255,255,0.08)" stroke="#2E86C1" stroke-width="2" />
+          <path d="M290 260 h70" stroke="#AED6F1" stroke-width="4" stroke-linecap="round" />
+          <path d="M290 280 h40" stroke="#2E86C1" stroke-width="4" stroke-linecap="round" />
+          <path d="M80 140 q40 -40 90 0" stroke="#AED6F1" stroke-width="5" stroke-linecap="round" />
+          <circle cx="80" cy="140" r="8" fill="#AED6F1" />
+          <circle cx="170" cy="140" r="8" fill="#2E86C1" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Problem Statement Strip -->
+<section class="section-alt py-5">
+  <div class="container">
+    <div class="text-center mb-4">
+      <h2 class="fw-bold">If any of these sound familiar, PathMap was built for you.</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100 text-center">
+          <i class="bi bi-search display-5 text-primary"></i>
+          <h5 class="mt-3">Researching for months, deciding nothing</h5>
+          <p class="text-muted">You've read every article, watched every video, and still can't commit to a direction.</p>
+        </div>
+      </div>
+      <div class="col-md-4 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100 text-center">
+          <i class="bi bi-exclamation-triangle display-5" style="color:#D68910;"></i>
+          <h5 class="mt-3">Afraid of choosing the wrong path</h5>
+          <p class="text-muted">The fear of a costly mistake keeps you stuck in a loop of analysis instead of action.</p>
+        </div>
+      </div>
+      <div class="col-md-4 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100 text-center">
+          <i class="bi bi-people display-5" style="color:#1E8449;"></i>
+          <h5 class="mt-3">No real data from people like you</h5>
+          <p class="text-muted">Generic advice doesn't account for your background, income floor, or life constraints.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5" id="how-it-works">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">How PathMap Works</h2>
+      <p class="text-muted">Three structured steps from career confusion to confident action.</p>
+    </div>
+    <div class="row align-items-center">
+      <div class="col-md-4 text-center animate-on-scroll">
+        <div class="step-number-badge mb-3">01</div>
+        <h5 class="fw-bold">Assess Your Profile</h5>
+        <p class="text-muted">Complete our 15-minute psychometric assessment that maps your values, work style, transferable skills, and life constraints into a clear career profile.</p>
+      </div>
+      <div class="col-md-4 text-center d-none d-md-block">
+        <div class="step-connector-line"></div>
+      </div>
+      <div class="col-md-4 text-center animate-on-scroll">
+        <div class="step-number-badge mb-3">02</div>
+        <h5 class="fw-bold">Analyze Your Options</h5>
+        <p class="text-muted">Compare your target careers with a real-time skill transfer map. See exactly which skills you already have and what you need to learn.</p>
+      </div>
+    </div>
+    <div class="row mt-4 align-items-center">
+      <div class="col-md-4 text-center animate-on-scroll">
+        <div class="step-number-badge mb-3">03</div>
+        <h5 class="fw-bold">Build Your Plan</h5>
+        <p class="text-muted">Generate a committed 90-day action roadmap with weekly milestones, curated learning resources, and progress tracking.</p>
+      </div>
+      <div class="col-md-8 d-none d-md-block"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Feature Highlights -->
+<section class="py-5" id="features" style="background:#F8F9FA;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Everything You Need to Make the Decision</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="pathmap-card feature-card p-4 h-100">
+          <div class="icon-wrap" style="background:#2E86C1;"><i class="bi bi-diagram-3"></i></div>
+          <h5 class="mt-3">Skill Transfer Analyzer</h5>
+          <p class="text-muted">See exactly how much of your current expertise carries over to your target career. Most pivots are 60–70% there already — we make that visible.</p>
+          <a href="{{ url_for('main.how_it_works') }}" class="fw-bold text-accent">See How It Works →</a>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="pathmap-card feature-card p-4 h-100">
+          <div class="icon-wrap" style="background:#1A5276;"><i class="bi bi-journal-richtext"></i></div>
+          <h5 class="mt-3">Real Journey Database</h5>
+          <p class="text-muted">Filter hundreds of structured, anonymized career pivot stories by your starting point. Not inspirational content — actual data on timelines, costs, income changes, and what failed.</p>
+          <a href="{{ url_for('journeys.explorer') }}" class="fw-bold text-accent">Explore Journeys →</a>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="pathmap-card feature-card p-4 h-100">
+          <div class="icon-wrap" style="background:#1E8449;"><i class="bi bi-calendar-check"></i></div>
+          <h5 class="mt-3">90-Day Pivot Roadmap</h5>
+          <p class="text-muted">Convert your decision into a specific, time-bounded action plan. Weekly milestones covering skill-building, networking, and portfolio development.</p>
+          <a href="{{ url_for('main.how_it_works') }}#roadmap" class="fw-bold text-accent">See a Sample Roadmap →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Journey Preview -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Real Transitions. Real Data.</h2>
+      <p class="text-muted">These are structured, anonymized accounts from professionals who made career pivots — including what failed, not just what worked.</p>
+    </div>
+    <div class="row g-4">
+      {% set previews = journey_previews if journey_previews|length > 0 else [] %}
+      {% if previews|length == 0 %}
+        {% set previews = [
+          {'origin_role':'Marketing Manager','target_role':'Product Manager','timeline_months':9,'income_change_pct':22,'summary':'Moved from campaign management to building SaaS product experiences while leveraging customer insight skills and stakeholder management.', 'outcome_status':'Completed', 'id':1},
+          {'origin_role':'Civil Engineer','target_role':'Data Analyst','timeline_months':7,'income_change_pct':5,'summary':'Transitioned from site operations to analytics by building SQL, Python, and dashboard projects focused on operational efficiency.', 'outcome_status':'In Progress', 'id':2}
+        ] %}
+      {% endif %}
+
+      {% for journey in previews %}
+      <div class="col-md-6 animate-on-scroll" data-journey-card>
+        <div class="journey-preview-card p-4 h-100">
+          <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+            <span class="from-to-badge">From {{ journey.origin_role or 'Current role' }} → To {{ journey.target_role or 'Target role' }}</span>
+            {% if journey.timeline_months %}<span class="timeline-badge">{{ journey.timeline_months }} months</span>{% endif %}
+            {% if journey.income_change_pct is not none %}
+              {% set change = journey.income_change_pct %}
+              <span class="income-badge text-white {% if change > 0 %}bg-success{% elif change == 0 %}bg-warning{% else %}bg-danger{% endif %}">{{ change }}% income change at 12 months</span>
+            {% endif %}
+          </div>
+          <p class="mb-3">{{ (journey.summary or 'Journey summary coming soon')[:150] }}{% if (journey.summary or '')|length > 150 %}...{% endif %}</p>
+          {% if journey.outcome_status %}
+            <span class="badge {% if journey.outcome_status|lower == 'completed' %}bg-success{% elif journey.outcome_status|lower == 'in progress' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ journey.outcome_status }}</span>
+          {% endif %}
+          <div class="mt-3">
+            <a class="fw-bold text-accent" href="{{ url_for('journeys.journey_detail', journey_id=journey.id) if journey.id else url_for('journeys.explorer') }}">Read Full Journey →</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-4">
+      <a class="btn btn-pathmap-primary" href="{{ url_for('journeys.explorer') }}">Read journeys like yours →</a>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="section-alt py-5">
+  <div class="container" data-testimonial-carousel>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="fw-bold mb-1">What PathMap Users Say</h2>
+        <p class="text-muted mb-0">Specific, data-backed stories from real professionals.</p>
+      </div>
+      <div class="d-none d-md-flex gap-2">
+        <button class="btn btn-outline-light text-dark border" type="button" data-carousel-prev><i class="bi bi-arrow-left"></i></button>
+        <button class="btn btn-outline-light text-dark border" type="button" data-carousel-next><i class="bi bi-arrow-right"></i></button>
+      </div>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4 testimonial-card animate-on-scroll">
+        <div class="d-flex mb-2 text-warning">
+          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+        </div>
+        <p>“PathMap's skill transfer analysis showed me I was already 68% qualified for UX design. That one insight broke two years of paralysis.”</p>
+        <p class="fw-bold mb-0">Priya S.</p>
+        <small class="text-muted">Former Civil Engineer → UX Designer at a SaaS startup</small>
+      </div>
+      <div class="col-md-4 testimonial-card animate-on-scroll">
+        <div class="d-flex mb-2 text-warning">
+          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+        </div>
+        <p>“The 90-day roadmap forced me to sequence my networking, projects, and interviews. I landed a product role in 5 months while working full-time.”</p>
+        <p class="fw-bold mb-0">Arjun M.</p>
+        <small class="text-muted">Marketing Manager → Associate Product Manager</small>
+      </div>
+      <div class="col-md-4 testimonial-card animate-on-scroll">
+        <div class="d-flex mb-2 text-warning">
+          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+        </div>
+        <p>“The journey database gave me confidence about income floors. Seeing the +18% median change for data roles convinced my family to back the pivot.”</p>
+        <p class="fw-bold mb-0">Neha R.</p>
+        <small class="text-muted">Financial Analyst → Data Scientist</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Preview -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-bold">Simple, Transparent Pricing</h2>
+      <p class="text-muted">Start free. Upgrade when you're ready to commit.</p>
+    </div>
+    <div class="row justify-content-center g-4">
+      <div class="col-md-5 col-lg-4 animate-on-scroll">
+        <div class="pricing-card p-4 h-100">
+          <h5 class="fw-bold">Free Forever</h5>
+          <p class="text-muted">₹0 / month</p>
+          <ul class="list-unstyled mb-4">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Career Assessment</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>1 Skill Analysis/month</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>5 Journeys/month</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Basic Progress Tracker</li>
+            <li class="mb-2 text-muted"><i class="bi bi-x-circle text-muted me-2"></i>Decision Framework</li>
+            <li class="mb-2 text-muted"><i class="bi bi-x-circle text-muted me-2"></i>90-Day Roadmap</li>
+          </ul>
+          <a class="btn btn-pathmap-outline w-100" href="{{ url_for('auth.signup') }}">Get Started Free</a>
+        </div>
+      </div>
+      <div class="col-md-5 col-lg-4 animate-on-scroll">
+        <div class="pricing-card popular p-4 h-100 position-relative">
+          <span class="popular-badge">Most Popular</span>
+          <h5 class="fw-bold">Premium</h5>
+          <p class="text-muted">₹1,499/month or ₹11,999/year</p>
+          <ul class="list-unstyled mb-4">
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Everything in Free</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Unlimited Analyses</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Unlimited Journeys</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Decision Framework</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>90-Day Roadmap</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Session Marketplace</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>AI Career Advisor</li>
+            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>PDF Downloads</li>
+          </ul>
+          <a class="btn btn-pathmap-primary w-100" href="{{ url_for('main.pricing') }}">Start Premium</a>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-4">
+      <a class="fw-bold text-accent" href="{{ url_for('main.pricing') }}">See full feature comparison →</a>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="py-5">
+  <div class="container">
+    <div class="cta-banner-section p-5 text-center">
+      <h2 class="fw-bold mb-3 text-white">Your career pivot starts with one decision.</h2>
+      <p class="text-white-50 mb-4">Stop waiting for certainty. Build it. PathMap gives you the data and the plan.</p>
+      <a class="btn btn-light fw-bold px-4" href="{{ url_for('auth.signup') }}">Start My Free Assessment</a>
+      <div class="text-white-50 small mt-3">No credit card required. Free forever plan available.</div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

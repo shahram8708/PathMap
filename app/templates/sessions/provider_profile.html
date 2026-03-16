@@ -1,0 +1,211 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('sessions.marketplace') }}">Shadow Sessions</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">{{ provider.display_name }}</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip secondary" href="{{ url_for('sessions.marketplace') }}"><i class="bi bi-arrow-left"></i> Back to Marketplace</a>
+  {% if existing_booking %}
+    <a class="cta-chip" href="{{ url_for('sessions.my_bookings') }}"><i class="bi bi-calendar-event"></i> My Bookings</a>
+  {% else %}
+    <a class="cta-chip" href="{{ url_for('sessions.my_bookings') }}"><i class="bi bi-calendar-event"></i> My Bookings</a>
+  {% endif %}
+  <a class="cta-chip" href="{{ url_for('planner.planner_hub') }}"><i class="bi bi-compass"></i> Planner</a>
+  {% if not is_premium and not is_own_profile %}
+    <a class="cta-chip premium" href="{{ url_for('main.pricing') }}"><i class="bi bi-lock-fill"></i> Premium Required</a>
+  {% endif %}
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="provider-profile-header card border-0 shadow-sm p-3 mb-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="provider-avatar-circle large">{{ provider.display_name[0]|upper }}</div>
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2">
+            <h1 class="h3 mb-0">{{ provider.display_name }}</h1>
+            {% if provider.is_verified %}<span class="badge bg-success">✓ Verified</span>{% endif %}
+            {% if is_own_profile %}<span class="badge bg-secondary">Your profile</span>{% endif %}
+          </div>
+          <div class="text-muted"><i class="bi bi-briefcase me-1"></i>{{ provider.current_role.title }}</div>
+          <div class="provider-rating-row mt-1">
+            {% set rating_value = provider.avg_rating or 0 %}
+            {% for i in range(1,6) %}
+              {% if rating_value and rating_value >= i %}
+                <i class="bi bi-star-fill star-filled"></i>
+              {% elif rating_value and rating_value >= (i-0.5) %}
+                <i class="bi bi-star-half star-filled"></i>
+              {% else %}
+                <i class="bi bi-star star-empty"></i>
+              {% endif %}
+            {% endfor %}
+            <span class="ms-2 fw-semibold">{% if provider.total_reviews %}{{ '%.1f'|format(rating_value) }}{% else %}No reviews yet{% endif %}</span>
+            <span class="text-muted small">· {{ provider.total_reviews }} reviews · {{ completed_sessions }} sessions</span>
+          </div>
+          {% if provider.industries_covered %}
+          <div class="provider-industries mt-2 d-flex flex-wrap gap-1">
+            {% for industry_item in provider.industries_covered.split(',') %}
+              <span class="badge bg-light text-muted">{{ industry_item.strip() }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4 mb-3">
+      <h5 class="mb-3">About {{ provider.display_name }}</h5>
+      <div class="markdown-content">{{ provider.bio | markdown }}</div>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4 mb-3">
+      <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-camera-video"></i><h5 class="mb-0">What Happens in This Session</h5></div>
+      <div class="markdown-content">{{ provider.session_description | markdown }}</div>
+      {% if provider.session_format %}
+        <div class="session-details-row"><i class="bi bi-clock-history me-2"></i>{{ provider.session_format }}</div>
+      {% endif %}
+    </div>
+
+    {% if provider.transition_story %}
+    <div class="card border-0 shadow-sm p-4 mb-3">
+      <div class="d-flex align-items-center gap-2 mb-2"><i class="bi bi-signpost-split"></i><h5 class="mb-0">Career Transition Story</h5></div>
+      <div class="markdown-content">{{ provider.transition_story | markdown }}</div>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm p-4 mb-3">
+      <div class="d-flex align-items-center gap-2 mb-3"><i class="bi bi-chat-quote"></i><h5 class="mb-0">What Past Attendees Say</h5></div>
+      <div class="row align-items-center mb-3">
+        <div class="col-md-4 text-center">
+          <div class="display-5 fw-bold text-primary">{% if provider.total_reviews %}{{ '%.1f'|format(rating_value) }}{% else %}N/A{% endif %}</div>
+          <div class="text-muted">Based on {{ provider.total_reviews }} reviews</div>
+        </div>
+        <div class="col-md-8">
+          {% set total_reviews = provider.total_reviews or 0 %}
+          {% for star in range(5,0,-1) %}
+            {% set count = rating_distribution.get(star, 0) %}
+            {% set percent = (count / total_reviews * 100) if total_reviews else 0 %}
+            <div class="rating-breakdown-row d-flex align-items-center mb-1">
+              <span class="me-2">{{ star }}★</span>
+              <div class="rating-breakdown-bar flex-grow-1">
+                <div class="bar-fill" style="width: {{ percent }}%"></div>
+              </div>
+              <span class="ms-2 small text-muted">{{ count }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% if reviews %}
+        <div class="row g-3">
+          {% for review in reviews %}
+          <div class="col-12">
+            <div class="review-card p-3 border rounded-3 h-100">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                {% for i in range(1,6) %}
+                  {% if review.rating >= i %}
+                    <i class="bi bi-star-fill star-filled"></i>
+                  {% else %}
+                    <i class="bi bi-star star-empty"></i>
+                  {% endif %}
+                {% endfor %}
+                <span class="badge bg-light text-dark">Verified Session</span>
+              </div>
+              <p class="mb-2">{{ review.review_text }}</p>
+              <div class="d-flex flex-wrap gap-2 small text-muted">
+                {% if review.would_recommend %}<span class="review-verified-badge">✓ Would recommend</span>{% endif %}
+                {% if review.session_helped_decision %}<span class="badge bg-info text-dark">Helped decision</span>{% endif %}
+                <span>By {{ review.reviewer.first_name or 'PathMap user' }}</span>
+                <span>{{ review.created_at.strftime('%b %d, %Y') }}</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">Be the first to share your experience after booking.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="booking-sidebar-card card shadow-sm border-0 p-3 position-sticky" style="top: 90px;">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="provider-price-large mb-0">₹{{ '{:,.0f}'.format(provider.price_inr or 0) }}</div>
+        {% if provider.session_format %}<span class="text-muted small">{{ provider.session_format }}</span>{% endif %}
+      </div>
+      <div class="text-muted small mb-3">{{ provider.total_sessions }} sessions · {{ provider.rating_display }}</div>
+      {% if is_premium and not is_own_profile and not existing_booking %}
+      <form id="booking-notes-form">
+        {{ booking_form.hidden_tag() }}
+        <div class="mb-3">
+          <label class="form-label">Notes for the session</label>
+          <textarea class="form-control" name="notes_from_booker" rows="3" placeholder="Share context or questions for the provider"></textarea>
+        </div>
+        <button type="button" id="book-session-btn" class="btn btn-primary w-100 mb-2">Book This Session — ₹{{ '{:,.0f}'.format(provider.price_inr or 0) }}</button>
+        <div class="text-center text-muted small">Secure payment via Razorpay · 12.5% platform fee included</div>
+      </form>
+      {% elif not is_premium and not is_own_profile %}
+      <button type="button" class="btn btn-secondary w-100 mb-2" data-upgrade-trigger="true" disabled>Premium Required to Book</button>
+      <a class="btn btn-warning w-100" href="{{ url_for('main.pricing') }}">Upgrade for ₹1,499/month →</a>
+      {% elif existing_booking %}
+      <div class="alert alert-success">You have a session booked with this provider.</div>
+      <a class="btn btn-outline-primary w-100" href="{{ url_for('sessions.my_bookings') }}">View Booking Details →</a>
+      {% else %}
+      <div class="alert alert-info">This is your provider profile.</div>
+      <a class="btn btn-outline-primary w-100" href="{{ url_for('sessions.edit_provider_profile') }}">Edit Profile →</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upgradeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Premium Required to Book Sessions</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Upgrade to PathMap Premium to book shadow sessions and unlock:</p>
+        <ul class="mb-3">
+          <li>Unlimited shadow session bookings</li>
+          <li>Full Pivot Planner and AI decision summaries</li>
+          <li>All premium resources without limits</li>
+        </ul>
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('main.pricing') }}" class="btn btn-primary">Upgrade for ₹1,499/month →</a>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Maybe Later</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/marketplace.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const upgradeModal = new bootstrap.Modal(document.getElementById('upgradeModal'));
+    document.querySelectorAll('[data-upgrade-trigger="true"]').forEach(btn => {
+      btn.addEventListener('click', function(e) { e.preventDefault(); upgradeModal.show(); });
+    });
+    {% if is_premium and not is_own_profile and not existing_booking %}
+      initBookingPayment({
+        provider_id: {{ provider.id }},
+        create_order_url: "{{ url_for('sessions.create_booking_order', provider_id=provider.id) }}",
+        verify_url: "{{ url_for('sessions.verify_booking_payment', provider_id=provider.id) }}",
+        provider_name: "{{ provider.display_name }}",
+        provider_role: "{{ provider.current_role.title }}"
+      });
+    {% endif %}
+  });
+</script>
+{% endblock %}

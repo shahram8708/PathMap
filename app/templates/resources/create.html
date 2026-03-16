@@ -1,0 +1,97 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('resources.library') }}">Learning Resources</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">Add Resource</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip" href="{{ url_for('resources.library') }}"><i class="bi bi-list-ul"></i> Library</a>
+  <a class="cta-chip" href="{{ url_for('resources.my_bookmarks') }}"><i class="bi bi-bookmark"></i> Bookmarks</a>
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<div class="card border-0 shadow-sm p-4">
+  <div class="d-flex align-items-start justify-content-between mb-3">
+    <div>
+      <h1 class="h4 mb-1"><i class="bi bi-plus-circle me-2 text-primary"></i>Add a Learning Resource</h1>
+      <p class="text-muted mb-0">Share a course, tutorial, or project. Submissions are instantly available to everyone, just like a real-world community library.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('resources.library') }}">Back to Library</a>
+    </div>
+  </div>
+
+  {% if errors %}
+  <div class="alert alert-warning" role="alert">
+    <div class="fw-semibold">Please fix the following:</div>
+    <ul class="mb-0 small">
+      {% for err in errors %}
+      <li>{{ err }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" class="row g-3">
+    {% if csrf_token %}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% endif %}
+    <div class="col-md-6">
+      <label class="form-label">Skill<span class="text-danger">*</span></label>
+      <select class="form-select" name="skill_id" required>
+        <option value="">Select the skill this resource teaches</option>
+        {% for skill in skills %}
+        <option value="{{ skill.id }}" {% if form_data.get('skill_id') == skill.id %}selected{% endif %}>{{ skill.name }} ({{ skill.category }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Provider<span class="text-danger">*</span></label>
+      <input type="text" name="provider" class="form-control" placeholder="Coursera, YouTube, Codecademy..." value="{{ form_data.get('provider', '') }}" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Title<span class="text-danger">*</span></label>
+      <input type="text" name="title" class="form-control" placeholder="e.g., Modern React with Hooks" value="{{ form_data.get('title', '') }}" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Resource URL<span class="text-danger">*</span></label>
+      <input type="url" name="url" class="form-control" placeholder="https://..." value="{{ form_data.get('url', '') }}" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Format</label>
+      <select class="form-select" name="format_type">
+        {% for fmt in format_types %}
+        <option value="{{ fmt }}" {% if form_data.get('format_type') == fmt %}selected{% endif %}>{{ fmt|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Cost</label>
+      <select class="form-select" name="cost_tier">
+        {% for cost in cost_tiers %}
+        <option value="{{ cost }}" {% if form_data.get('cost_tier') == cost %}selected{% endif %}>{{ cost.replace('_', ' ')|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Estimated Hours<span class="text-danger">*</span></label>
+      <input type="number" step="0.5" min="0.5" name="estimated_hours" class="form-control" placeholder="e.g., 12" value="{{ form_data.get('estimated_hours', '') }}" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Quality Rating (0-5)</label>
+      <input type="number" step="0.1" min="0" max="5" name="quality_rating" class="form-control" placeholder="Default 4.0" value="{{ form_data.get('quality_rating', '') }}">
+    </div>
+    <div class="col-12 d-flex gap-2 mt-2">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Resource</button>
+      <a class="btn btn-link" href="{{ url_for('resources.library') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Career Assessment{% endblock %}
+{% block breadcrumb %}Dashboard / Career Assessment{% endblock %}
+{% block dashboard_content %}
+<div class="mb-4">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+    <div>
+      <h1 class="mb-2">Career Clarity Assessment</h1>
+      <p class="text-muted mb-1">A 22-minute assessment that maps your values, work style, transferable skills, and constraints into a structured career profile. This profile powers every tool on PathMap.</p>
+    </div>
+    <div class="text-lg-end">
+      <div class="small text-muted">Overall progress</div>
+      <div class="progress" style="height: 12px; width: 260px;">
+        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ completion_percentage|round(0) }}%" aria-valuenow="{{ completion_percentage|round(0) }}" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="small text-muted mt-1">{{ completed_count }} of 5 modules complete · Estimated {{ total_minutes }} min total</div>
+    </div>
+  </div>
+</div>
+
+{% if assessment.is_fully_complete %}
+  <div class="alert alert-success d-flex align-items-center justify-content-between p-3 mb-4 shadow-sm">
+    <div>
+      <div class="fw-bold">Your Career Profile is Ready 🎉</div>
+      <div class="small text-muted">Review your AI-generated profile and move into analysis.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('assessment.vision_module') }}">Retake modules</a>
+      <a class="btn btn-primary" href="{{ url_for('assessment.assessment_results') }}">View Your Career Profile →</a>
+    </div>
+  </div>
+{% elif completed_count == 0 %}
+  <div class="alert alert-info d-flex align-items-center p-3 mb-4 shadow-sm">
+    <i class="bi bi-lightbulb me-2"></i>
+    <div><strong>Where would you like to start?</strong> Begin with Module 1 — it takes just 4 minutes and sets the foundation for everything.</div>
+  </div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-12 col-lg-8">
+    {% set ns = namespace(active_set=False) %}
+    {% for module in modules %}
+      {% if module.completed %}
+        {% set state = 'completed' %}
+      {% elif (not module.locked) and (not ns.active_set) %}
+        {% set state = 'active' %}
+        {% set ns.active_set = True %}
+      {% elif module.locked %}
+        {% set state = 'locked' %}
+      {% else %}
+        {% set state = 'upcoming' %}
+      {% endif %}
+
+      <div class="assessment-module-card {{ state }} p-3 p-md-4 mb-2">
+        <div class="d-flex align-items-start justify-content-between flex-column flex-md-row gap-3">
+          <div class="d-flex align-items-start gap-3">
+            <div class="fs-3 text-primary">
+              {% if state == 'completed' %}
+                <i class="bi bi-check-circle-fill text-success"></i>
+              {% elif state == 'locked' %}
+                <i class="bi bi-lock text-muted"></i>
+              {% else %}
+                <i class="bi {{ module.icon }} text-primary"></i>
+              {% endif %}
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-1">{{ module.label }}</h5>
+                {% if state == 'completed' %}
+                  <span class="module-status-badge completed">Completed ✓</span>
+                {% elif state == 'active' %}
+                  <span class="module-status-badge active">Next up</span>
+                {% elif state == 'locked' %}
+                  <span class="module-status-badge locked">Locked</span>
+                {% endif %}
+              </div>
+              <p class="text-muted mb-2">{{ module.description }}</p>
+              <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-light text-dark {% if state == 'completed' %}text-decoration-line-through{% endif %}">~{{ module.estimated_minutes }} min</span>
+                {% if state == 'locked' %}
+                  <span class="text-muted small">Complete previous module first.</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="d-flex flex-column align-items-stretch gap-2 w-100 w-md-auto">
+            {% if state == 'completed' %}
+              <a class="btn btn-outline-secondary btn-sm" href="{{ module.url }}">Retake</a>
+            {% elif state == 'active' %}
+              <a class="btn btn-primary" href="{{ module.url }}">{% if completed_count > 0 %}Continue →{% else %}Start →{% endif %}</a>
+            {% elif state == 'upcoming' %}
+              <a class="btn btn-outline-primary" href="{{ module.url }}">Preview</a>
+            {% else %}
+              <button class="btn btn-outline-secondary" type="button" disabled>Locked</button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    <form class="d-flex justify-content-end mt-3" action="{{ url_for('assessment.retake_assessment') }}" method="POST">
+      {{ retake_form.hidden_tag() }}
+      <button class="btn btn-link text-decoration-none text-muted" type="submit"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset assessment</button>
+    </form>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="pathmap-card p-3 h-100">
+      <h6 class="mb-3">Why this assessment works</h6>
+      <div class="mb-3">
+        <div class="fw-bold">1) Externalize your criteria</div>
+        <div class="text-muted small">Writing down what matters removes decision fog and makes trade-offs explicit.</div>
+      </div>
+      <div class="mb-3">
+        <div class="fw-bold">2) Multi-dimensional profile</div>
+        <div class="text-muted small">Values, style, skills, and constraints reveal blind spots that single assessments miss.</div>
+      </div>
+      <div>
+        <div class="fw-bold">3) Reality-check built in</div>
+        <div class="text-muted small">Financial and time constraints keep recommendations feasible for your situation.</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/assessment.js') }}"></script>
+{% endblock %}

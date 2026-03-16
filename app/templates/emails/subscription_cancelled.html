@@ -1,0 +1,11 @@
+<div style="font-family: 'Inter', Arial, sans-serif; color: #0D1B2A;">
+  <h2>Your Premium subscription is ending</h2>
+  <p>Hi {{ user.first_name or 'PathMapper' }},</p>
+  {% if expires_at %}
+    <p>You will keep Premium access until <strong>{{ expires_at.strftime('%B %d, %Y') }}</strong>. After that date billing will stop and Premium features will lock.</p>
+  {% else %}
+    <p>Your Premium access is set to end at the close of your current billing cycle. Billing will stop automatically.</p>
+  {% endif %}
+  <p>If this was a mistake, you can reactivate anytime from Billing.</p>
+  <p>– The PathMap Team</p>
+</div>

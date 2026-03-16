@@ -1,0 +1,11 @@
+<div style="font-family: 'Inter', Arial, sans-serif; color: #0D1B2A;">
+  <h2>Welcome to PathMap Premium 🎉</h2>
+  <p>Hi {{ user.first_name or 'PathMapper' }},</p>
+  <p>Thanks for upgrading to <strong>PathMap Premium ({{ plan_type|capitalize }})</strong>. Your decision tools, roadmap generator, and provider network are now fully unlocked.</p>
+  {% if expires_at %}
+    <p>Your renewal is scheduled for <strong>{{ expires_at.strftime('%B %d, %Y') }}</strong>. We will remind you before renewal.</p>
+  {% endif %}
+  <p><a href="{{ dashboard_url }}" style="background:#2E86C1;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:700;">Open Dashboard</a></p>
+  <p>If you have any billing questions, reply to this email and our team will help.</p>
+  <p>– The PathMap Team</p>
+</div>

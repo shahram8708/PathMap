@@ -1,0 +1,69 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+Dashboard / Shadow Sessions / Edit Provider Profile
+{% endblock %}
+{% block dashboard_content %}
+<div class="card shadow-sm border-0 p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Edit Provider Profile</h4>
+    <a class="btn btn-outline-secondary" href="{{ url_for('sessions.provider_dashboard') }}">Back</a>
+  </div>
+  <form method="post" action="{{ url_for('sessions.save_provider_profile') }}">
+    {{ form.hidden_tag() }}
+    <div class="row g-3">
+      <div class="col-md-6">
+        {{ form.current_role_id.label(class='form-label') }}
+        {{ form.current_role_id(class='form-select') }}
+      </div>
+      <div class="col-md-6">
+        {{ form.proposed_display_name.label(class='form-label') }}
+        {{ form.proposed_display_name(class='form-control') }}
+      </div>
+      <div class="col-md-6">
+        {{ form.years_in_target_role.label(class='form-label') }}
+        {{ form.years_in_target_role(class='form-control') }}
+      </div>
+      <div class="col-md-6">
+        {{ form.industries_covered.label(class='form-label') }}
+        {{ form.industries_covered(class='form-control') }}
+      </div>
+      <div class="col-12">
+        {{ form.proposed_bio.label(class='form-label') }}
+        {{ form.proposed_bio(class='form-control', rows='4') }}
+      </div>
+      <div class="col-12">
+        {{ form.transition_story.label(class='form-label') }}
+        {{ form.transition_story(class='form-control', rows='3') }}
+      </div>
+      <div class="col-12">
+        {{ form.proposed_session_description.label(class='form-label') }}
+        {{ form.proposed_session_description(class='form-control', rows='3') }}
+      </div>
+      <div class="col-md-6">
+        {{ form.session_format.label(class='form-label') }}
+        {{ form.session_format(class='form-control') }}
+      </div>
+      <div class="col-md-6">
+        {{ form.proposed_price_inr.label(class='form-label') }}
+        {{ form.proposed_price_inr(class='form-control') }}
+      </div>
+      <div class="col-md-6">
+        {{ form.booking_url.label(class='form-label') }}
+        {{ form.booking_url(class='form-control') }}
+      </div>
+      <div class="col-md-6">
+        {{ form.linkedin_url.label(class='form-label') }}
+        {{ form.linkedin_url(class='form-control') }}
+      </div>
+      <div class="col-12 form-check">
+        {{ form.is_active(class='form-check-input', id='is_active') }}
+        <label class="form-check-label" for="is_active">{{ form.is_active.label.text }}</label>
+      </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <a class="btn btn-outline-secondary" href="{{ url_for('sessions.provider_dashboard') }}">Cancel</a>
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

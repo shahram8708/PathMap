@@ -1,0 +1,100 @@
+{% if current_user.is_authenticated %}{% extends 'dashboard_base.html' %}{% else %}{% extends 'base.html' %}{% endif %}
+{% block breadcrumb %}Career Journeys / {{ origin_role.title if origin_role else 'Origin' }} → {{ target_role.title if target_role else 'Target' }}{% endblock %}
+{% block dashboard_content %}
+<div class="journey-detail-header mb-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div>
+      <h1 class="h4 mb-1">{{ origin_role.title if origin_role else 'Origin Role' }} → {{ target_role.title if target_role else 'Target Role' }}</h1>
+      <div class="text-muted">Shared by: {{ journey.pseudonym or 'Anonymous' }}</div>
+    </div>
+    <span class="badge fs-6 outcome-badge {{ journey.outcome_status }}">{{ 'Completed' if journey.outcome_status=='completed' else 'In Progress' if journey.outcome_status=='in_progress' else 'Reversed' }}</span>
+  </div>
+  <div class="row mt-3 g-2">
+    <div class="col-md-3"><div class="p-2 bg-white border rounded text-center">Timeline: <strong>{{ journey.timeline_months }} months</strong></div></div>
+    <div class="col-md-3"><div class="p-2 bg-white border rounded text-center">Experience: <strong>{{ journey.experience_at_pivot }} yrs</strong></div></div>
+    <div class="col-md-3"><div class="p-2 bg-white border rounded text-center">Income Change: <strong class="text-{{ 'success' if income_direction=='positive' else 'danger' if income_direction=='negative' else 'muted' }}">{{ '%+.0f'|format(journey.income_change_pct or 0) }}%</strong></div></div>
+    <div class="col-md-3"><div class="p-2 bg-white border rounded text-center">Region: <strong>{{ journey.geographic_region }}</strong></div></div>
+  </div>
+  <div class="d-flex gap-3 text-muted small mt-2">
+    <span>Published: {{ journey.published_at.strftime('%b %d, %Y') if journey.published_at else 'Pending' }}</span>
+    <span>Views: {{ journey.view_count }}</span>
+  </div>
+</div>
+
+<div class="alert alert-info small">PathMap shows both successful and unsuccessful career pivots. Reading why pivots fail is as valuable as reading why they succeed.</div>
+
+<div class="journey-summary-quote mb-3">
+  <div class="markdown-content compact">{{ journey.summary | markdown }}</div>
+</div>
+
+<div class="journey-section-card worked mb-3">
+  <h5 class="text-success">✓ What Worked</h5>
+  <div class="markdown-content">{{ journey.what_worked | markdown }}</div>
+</div>
+
+<div class="journey-section-card failed mb-3">
+  <h5 class="text-danger">✗ What Didn't Work</h5>
+  <div class="markdown-content">{{ journey.what_failed | markdown }}</div>
+</div>
+
+<div class="journey-section-card unexpected mb-3">
+  <h5 class="text-warning">⚡ Unexpected Discoveries</h5>
+  <div class="markdown-content">{{ journey.unexpected_discoveries | markdown }}</div>
+</div>
+
+<div class="journey-section-card advice mb-3">
+  <h5 class="text-primary">💡 Advice to Others</h5>
+  <div class="markdown-content">{{ journey.advice_to_others | markdown }}</div>
+</div>
+
+{% if journey.outcome_status == 'reversed' and journey.reversal_reason %}
+  <div class="journey-section-card reversed mb-3">
+    <h5 class="text-warning">Why I Reversed Course</h5>
+    <p class="mb-0">{{ journey.reversal_reason }}</p>
+    <div class="small text-muted mt-2">A reversed pivot is not a failure. This person gained valuable information about themselves and what they need from their career.</div>
+  </div>
+{% endif %}
+
+{% if journey.total_cost_inr %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h6 class="mb-1">Transition Cost</h6>
+      <div>Approximately ₹{{ '%.0f'|format(journey.total_cost_inr) }}</div>
+      <div class="text-muted small">Covers course fees, certifications, and any income gaps.</div>
+    </div>
+  </div>
+{% endif %}
+
+{% if transition_stats.has_sufficient_data %}
+  <div class="transition-stats-panel mb-3">
+    <h6>Data from All {{ origin_role.title if origin_role else 'Origin' }} → {{ target_role.title if target_role else 'Target' }} Pivots on PathMap</h6>
+    <div class="row g-2">
+      <div class="col-md-3">Journeys: <strong>{{ transition_stats.count }}</strong></div>
+      <div class="col-md-3">Success rate: <strong>{{ ('%.0f'|format(transition_stats.success_rate * 100)) if transition_stats.success_rate is not none else 'N/A' }}%</strong></div>
+      <div class="col-md-3">Median timeline: <strong>{{ transition_stats.median_timeline or '—' }} months</strong></div>
+      <div class="col-md-3">Income P25–P75: <strong>{{ transition_stats.income_change_p25|default('N/A') }} / {{ transition_stats.income_change_p75|default('N/A') }}</strong></div>
+    </div>
+    <div class="text-muted small mt-2">Statistics shown are based on anonymized PathMap journey submissions and reflect real-world outcomes, not curated success stories.</div>
+  </div>
+{% endif %}
+
+{% if related_journeys %}
+  <h5 class="mt-4">Other journeys you might find relevant</h5>
+  <div class="row g-3">
+    {% for item in related_journeys %}
+      <div class="col-md-4">
+        <div class="journey-card p-3 h-100">
+          <div class="fw-semibold mb-1">{{ item.origin_role.title if item.origin_role else 'Role' }} → {{ item.target_role.title if item.target_role else 'Role' }}</div>
+          <div class="small text-muted mb-2">{{ item.timeline_months }} months · {{ '%+.0f'|format(item.income_change_pct or 0) }}% income</div>
+          <p class="text-muted small mb-2">{{ item.summary[:140] }}{% if item.summary|length > 140 %}...{% endif %}</p>
+          <a class="btn btn-outline-primary btn-sm" href="{{ url_for('journeys.journey_detail', journey_id=item.id) }}">Read →</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="mt-3">
+  <a href="{{ url_for('journeys.explorer') }}">← Back to Explorer</a>
+</div>
+{% endblock %}

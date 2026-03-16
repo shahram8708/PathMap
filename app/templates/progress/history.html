@@ -1,0 +1,89 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}Dashboard / Progress Tracker / History{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h3 mb-1">Check-In History</h1>
+    <div class="text-muted">Review every check-in you've logged.</div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body d-flex flex-wrap gap-3 text-muted">
+    <div>Total check-ins: <span class="fw-semibold text-dark">{{ total_entries_count }}</span></div>
+    <div>Longest streak: <span class="fw-semibold text-dark">{{ max_streak }} weeks</span></div>
+    <div>Average mood: <span class="fw-semibold text-dark">{{ '%.1f'|format(avg_mood) }}/5</span></div>
+  </div>
+</div>
+
+{% if not entries %}
+  <div class="alert alert-info">No check-ins yet. Your first check-in starts your streak. <a href="{{ url_for('progress.checkin_form') }}">Log First Check-In →</a></div>
+{% else %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th>
+          <th>Week</th>
+          <th>Mood</th>
+          <th>Tasks Completed</th>
+          <th>Reflection</th>
+          <th>Obstacles</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+          {% set collapse_id = 'entry-' ~ entry.id %}
+          <tr>
+            <td>{{ entry.entry_date.strftime('%b %d, %Y') }}</td>
+            <td>Week {{ entry.week_number }}</td>
+            <td>{% if entry.mood_rating %}{{ '😞 Struggling' if entry.mood_rating == 1 else '😕 Difficult' if entry.mood_rating == 2 else '😐 Okay' if entry.mood_rating == 3 else '🙂 Good' if entry.mood_rating == 4 else '😊 Great' }}{% else %}—{% endif %}</td>
+            <td><span class="badge bg-secondary">{{ entry.completed_task_count }}</span></td>
+            <td class="text-muted small">{{ entry.reflection[:80] if entry.reflection else 'No reflection' }}{% if entry.reflection and entry.reflection|length > 80 %}...{% endif %}</td>
+            <td>{% if entry.obstacles_noted %}<i class="bi bi-check-circle-fill text-warning"></i>{% else %}—{% endif %}</td>
+            <td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#{{ collapse_id }}" aria-expanded="false" aria-controls="{{ collapse_id }}">View</button></td>
+          </tr>
+          <tr class="collapse" id="{{ collapse_id }}">
+            <td colspan="7" class="bg-light">
+              <div class="p-3">
+                <div class="mb-2"><strong>Reflection:</strong> {{ entry.reflection or 'No reflection' }}</div>
+                {% if entry.obstacles_noted %}
+                  <div class="mb-2"><strong>Obstacles:</strong> {{ entry.obstacles_noted }}</div>
+                {% endif %}
+                <div class="mb-0"><strong>Tasks completed:</strong>
+                  {% if entry.completed_task_details %}
+                    <ul class="mb-0">
+                      {% for tid, title in entry.completed_task_details %}
+                        <li>{{ title }} (ID: {{ tid }})</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    None recorded
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <nav aria-label="History pagination">
+    <ul class="pagination">
+      {% if pagination.has_prev %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('progress.progress_history', page=pagination.prev_num) }}">Previous</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span></li>
+      {% if pagination.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('progress.progress_history', page=pagination.next_num) }}">Next</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}404 — Page Not Found | PathMap{% endblock %}
+{% block content %}
+<div class="error-page-container">
+  <div class="error-page-card">
+    <div class="error-code-display">404</div>
+    <div class="error-icon-container compass"><i class="bi bi-compass"></i></div>
+    <h2 class="error-heading">Page Not Found</h2>
+    <p class="error-body-text">The page you’re looking for isn’t here. It might have moved, or the link may have a typo. Choose a helpful destination below to keep exploring.</p>
+    <div class="error-actions">
+      <a class="btn btn-primary w-100" href="{{ url_for('main.index') }}">Back to Homepage</a>
+      <a class="text-decoration-none" href="{{ url_for('journeys.explorer') }}">Browse Career Journeys</a>
+      <a class="text-decoration-none" href="{{ url_for('main.how_it_works') }}">How PathMap Works</a>
+      <a class="text-decoration-none" href="{{ url_for('main.contact') }}">Contact Support</a>
+      <a class="text-decoration-none" href="javascript:history.back()">← Go back to previous page</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

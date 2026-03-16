@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Features{% endblock %}
+{% block content %}
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <span class="badge text-bg-light border fw-semibold mb-3">Product Overview</span>
+        <h1 class="fw-bold mb-3">Everything you need to choose and execute a career pivot with evidence</h1>
+        <p class="text-muted mb-4">PathMap combines assessment, feasibility scoring, real-world journey data, and an execution-ready roadmap so you can move from idea to offer without second-guessing every step.</p>
+        <div class="d-flex flex-wrap gap-3">
+          <a class="btn btn-pathmap-primary" href="{{ url_for('auth.signup') }}">Start free</a>
+          <a class="btn btn-pathmap-outline" href="{{ url_for('main.for_teams') }}">For teams</a>
+          <a class="btn btn-link fw-bold" href="{{ url_for('main.pricing') }}">See pricing <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="pathmap-card p-4">
+          <h6 class="fw-bold mb-3">What we optimize for</h6>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Time to decision</span>
+            <span class="fw-bold text-primary"><i class="bi bi-clock-history me-1"></i>Under 14 days</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Income floor respected</span>
+            <span class="fw-bold text-success"><i class="bi bi-shield-check me-1"></i>Yes</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Roadmap coverage</span>
+            <span class="fw-bold text-primary"><i class="bi bi-list-check me-1"></i>90 days</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Data sources</span>
+            <span class="fw-bold text-primary"><i class="bi bi-database-check me-1"></i>Benchmarked journeys</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+      <div>
+        <p class="text-uppercase text-muted small mb-1">Platform pillars</p>
+        <h2 class="fw-bold mb-0">Built to move you from clarity to execution</h2>
+      </div>
+      <a class="btn btn-pathmap-outline" href="{{ url_for('main.how_it_works') }}">See the workflow</a>
+    </div>
+    <div class="row g-4">
+      {% set pillars = [
+        {'title':'Career clarity assessment','icon':'bi-clipboard-data','desc':'Map your values, constraints, income floor, risk tolerance, and motivation into a pivot profile that powers the rest of the product.'},
+        {'title':'Feasibility engine','icon':'bi-graph-up-arrow','desc':'Blend your profile with labour-market signals and historic journey outcomes to score which roles are actually reachable for you.'},
+        {'title':'Journey library','icon':'bi-collection-play','desc':'Structured, anonymized journeys with timelines, income trajectories, blockers, and resources used by people like you.'},
+        {'title':'Decision framework','icon':'bi-diagram-3','desc':'Weighted criteria matrix to compare two or more target roles with transparent rationale you can defend.'},
+        {'title':'Roadmap generator','icon':'bi-calendar3-range','desc':'90-day execution plan with weekly milestones across skills, proof-of-work, and networking, tuned to your feasibility score.'},
+        {'title':'Progress and momentum','icon':'bi-activity','desc':'Track habits, milestone completion, and blockers. Get nudges when you fall behind and suggestions to course-correct.'}
+      ] %}
+      {% for pillar in pillars %}
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary mb-3" style="width:48px;height:48px;">
+            <i class="bi {{ pillar.icon }} fs-5"></i>
+          </div>
+          <h5 class="fw-bold">{{ pillar.title }}</h5>
+          <p class="text-muted mb-0">{{ pillar.desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <p class="text-uppercase text-muted small mb-1">Feature breakdown</p>
+    <h2 class="fw-bold mb-4">What you get, in detail</h2>
+    <div class="row g-4">
+      {% set feature_groups = [
+        {'name':'Assess and calibrate','items':[
+          '15-minute clarity assessment covering values, work style, constraints, and risk tolerance',
+          'Income floor, region, and timeline inputs to ground feasibility',
+          'Mismatch detector that flags when goals and constraints conflict'
+        ]},
+        {'name':'Decide with evidence','items':[
+          'Feasibility scoring with rationale per target role',
+          'Scenario planning: adjust timeline or location to see impact on odds',
+          'Decision matrix exports for stakeholders or mentors'
+        ]},
+        {'name':'Plan and execute','items':[
+          'Roadmap generator: weekly milestones across skills, proof-of-work, and outreach',
+          'Template library: outreach scripts, portfolio briefs, and interview prep',
+          'Resource linker: curated courses and communities mapped to your gaps'
+        ]},
+        {'name':'Stay accountable','items':[
+          'Progress tracker with momentum score',
+          'Blocker logging plus recommended fixes based on similar journeys',
+          'Shadow sessions with vetted professionals for targeted Q&A'
+        ]}
+      ] %}
+      {% for group in feature_groups %}
+      <div class="col-lg-6 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100">
+          <div class="d-flex align-items-center mb-3">
+            <span class="step-number-badge me-3">{{ '%02d' % loop.index }}</span>
+            <h5 class="fw-bold mb-0">{{ group.name }}</h5>
+          </div>
+          <ul class="mb-0 ps-3">
+            {% for item in group["items"] %}
+            <li class="text-muted mb-2">{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-6">
+        <p class="text-uppercase text-muted small mb-1">Data, privacy, trust</p>
+        <h3 class="fw-bold mb-3">Evidence-backed, privacy-first</h3>
+        <p class="text-muted">We combine anonymized, permissioned journey data with public labour-market signals. Your personal inputs never leave PathMap; we only expose aggregate benchmarks.</p>
+        <div class="d-flex flex-column gap-2">
+          <div class="d-flex align-items-start gap-2">
+            <i class="bi bi-shield-lock text-primary"></i>
+            <span class="text-muted">Access-controlled journeys with removed identifiers</span>
+          </div>
+          <div class="d-flex align-items-start gap-2">
+            <i class="bi bi-database-lock text-primary"></i>
+            <span class="text-muted">Data residency in-region with encrypted storage</span>
+          </div>
+          <div class="d-flex align-items-start gap-2">
+            <i class="bi bi-clipboard2-pulse text-primary"></i>
+            <span class="text-muted">Model accuracy tracked against real outcomes</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="pathmap-card p-4 h-100">
+          <h6 class="fw-bold mb-3">Signals we track</h6>
+          <div class="row g-3">
+            {% set signals = [
+              {'label':'Time to first offer','value':'7-18 weeks'},
+              {'label':'Median income delta','value':'+18% post-pivot'},
+              {'label':'Skill overlap accuracy','value':'>92% vs expert rating'},
+              {'label':'Roadmap completion','value':'78% finish in 90 days'}
+            ] %}
+            {% for signal in signals %}
+            <div class="col-sm-6">
+              <div class="border rounded-3 p-3 h-100 bg-white">
+                <p class="text-muted small mb-1">{{ signal.label }}</p>
+                <h5 class="fw-bold mb-0 text-primary">{{ signal.value }}</h5>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <p class="text-uppercase text-muted small mb-1">Flow</p>
+    <h3 class="fw-bold mb-4">From sign-up to first offer</h3>
+    <div class="row g-4">
+      {% set steps = [
+        {'title':'Calibrate', 'desc':'Complete the assessment, set constraints, and pick initial targets.'},
+        {'title':'Decide', 'desc':'Review feasibility scores and lock your primary and backup roles.'},
+        {'title':'Plan', 'desc':'Generate the 90-day roadmap and export the decision rationale.'},
+        {'title':'Execute', 'desc':'Work the weekly milestones, log blockers, and book shadow sessions.'},
+        {'title':'Adjust', 'desc':'Use momentum and blocker data to tweak your plan without losing pace.'},
+        {'title':'Win', 'desc':'Track interviews, offers, and income changes to close the loop.'}
+      ] %}
+      {% for step in steps %}
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100">
+          <div class="d-flex align-items-center mb-3">
+            <span class="timeline-badge me-2">Step {{ loop.index }}</span>
+            <h6 class="fw-bold mb-0">{{ step.title }}</h6>
+          </div>
+          <p class="text-muted mb-0">{{ step.desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="pathmap-card p-5 text-center">
+      <h3 class="fw-bold mb-2">Ready to see your path?</h3>
+      <p class="text-muted mb-4">Start with the free assessment. Upgrade only when you need unlimited analyses and the full roadmap.</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a class="btn btn-pathmap-primary" href="{{ url_for('auth.signup') }}">Start free</a>
+        <a class="btn btn-pathmap-outline" href="{{ url_for('main.pricing') }}">Compare plans</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

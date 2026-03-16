@@ -1,0 +1,103 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}Dashboard / Progress Tracker / Weekly Check-In{% endblock %}
+{% block dashboard_content %}
+<div class="mb-3">
+  <h1 class="h3 mb-1">Week {{ current_week_number }} Check-In</h1>
+  <div class="reflection-blockquote bg-white p-3 rounded-3">{{ reflection_prompt }}</div>
+</div>
+
+{% if already_checked_in %}
+  <div class="alert alert-success">You already logged a check-in today (Week {{ current_week_number }}). You can update it below — your latest submission replaces the earlier one.</div>
+{% endif %}
+
+<form method="POST" action="{{ url_for('progress.checkin_save') }}" class="card shadow-sm">
+  {{ form.hidden_tag() }}
+  <div class="card-body">
+    <div class="mb-4">
+      <h5 class="mb-2"><i class="bi bi-check2-square me-2"></i>This Week's Tasks</h5>
+      {% if current_week_tasks %}
+        <div class="d-flex flex-column gap-2">
+          {% for task in current_week_tasks %}
+            {% set checked = task.id|string in completed_task_ids %}
+            <label class="check-in-task-row {{ 'completed' if checked }}" for="task-{{ task.id }}">
+              <input type="checkbox" id="task-{{ task.id }}" name="tasks_completed" value="{{ task.id }}" class="task-checkbox-custom" {{ 'checked' if checked }}>
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  {% if task.type %}<span class="badge bg-light text-dark text-uppercase">{{ task.type }}</span>{% endif %}
+                  <span class="fw-semibold">{{ task.title or task.name }}</span>
+                  {% if task.hours %}<span class="badge bg-secondary">{{ task.hours }} hrs</span>{% endif %}
+                </div>
+                {% if task.description %}<div class="text-muted small">{{ task.description }}</div>{% endif %}
+                {% if task.resource_url %}
+                  <a class="small" href="{{ task.resource_url }}" target="_blank">Resource</a>
+                {% endif %}
+              </div>
+            </label>
+          {% endfor %}
+        </div>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          <div id="task-selected-count" class="small text-muted">0 tasks selected</div>
+          <div id="task-all-complete" class="small text-success d-none"><i class="bi bi-check-circle"></i> All tasks complete! 🎉</div>
+        </div>
+      {% else %}
+        <div class="text-muted">No specific tasks scheduled for this week.</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-4">
+      <h5 class="mb-2"><i class="bi bi-emoji-smile me-2"></i>How are you feeling about your pivot this week?</h5>
+      <input type="hidden" id="mood_rating" name="mood_rating" value="{{ form.mood_rating.data or existing_entry.mood_rating if existing_entry else '' }}">
+      <div class="mood-emoji-selector">
+        <div class="mood-emoji-card" data-mood="1">😞<div class="small">Struggling</div></div>
+        <div class="mood-emoji-card" data-mood="2">😕<div class="small">Difficult</div></div>
+        <div class="mood-emoji-card" data-mood="3">😐<div class="small">Okay</div></div>
+        <div class="mood-emoji-card" data-mood="4">🙂<div class="small">Good</div></div>
+        <div class="mood-emoji-card" data-mood="5">😊<div class="small">Great</div></div>
+      </div>
+      {% if form.mood_rating.errors %}
+        <div class="text-danger small mt-1">{{ form.mood_rating.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-4">
+      <h5 class="mb-2"><i class="bi bi-journal-text me-2"></i>Your Reflection</h5>
+      <div class="alert alert-info py-2 px-3 mb-2">{{ reflection_prompt }}</div>
+      {{ form.reflection(class_='form-control', rows='5', placeholder='Write freely — your reflections are private and visible only to you.') }}
+      <div class="form-text text-end" id="reflection-counter">0 / 2000</div>
+      {% if form.reflection.errors %}<div class="text-danger small">{{ form.reflection.errors[0] }}</div>{% endif %}
+    </div>
+
+    <div class="mb-4">
+      <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#obstaclesCollapse" aria-expanded="false" aria-controls="obstaclesCollapse">
+        <i class="bi bi-exclamation-triangle me-1"></i>Any obstacles or blockers?
+      </button>
+      <div class="collapse" id="obstaclesCollapse">
+        {{ form.obstacles_noted(class_='form-control mt-2', rows='3', placeholder='Naming obstacles clearly is the first step to addressing them. What is getting in the way of your progress?') }}
+        {% if form.obstacles_noted.errors %}<div class="text-danger small">{{ form.obstacles_noted.errors[0] }}</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <button type="submit" class="btn btn-primary btn-lg">Save My Check-In →</button>
+      <div class="form-text text-center mt-2">Your check-in data is private. Only you can see your reflections and mood ratings.</div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const initialMood = {{ (existing_entry.mood_rating if existing_entry else None)|tojson }};
+    initMoodSelector(initialMood);
+    initCheckInTaskCounter();
+    const reflectionField = document.getElementById('{{ form.reflection.id }}');
+    const counter = document.getElementById('reflection-counter');
+    if (reflectionField && counter) {
+      const updateCount = () => { counter.textContent = `${reflectionField.value.length} / 2000`; };
+      reflectionField.addEventListener('input', updateCount);
+      updateCount();
+    }
+  });
+</script>
+{% endblock %}

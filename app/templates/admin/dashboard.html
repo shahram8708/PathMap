@@ -1,0 +1,258 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% set page_title = 'Admin Dashboard' %}
+{% set page_tagline = 'Revenue, usage, and content health' %}
+{% block head_extra %}
+{{ super() }}
+<style>
+  .admin-chart { width: 100%; height: 260px !important; max-height: 260px; }
+</style>
+{% endblock %}
+{% block admin_header_actions %}
+<div class="d-flex flex-wrap gap-2">
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.export_revenue_csv') }}">
+    <i class="bi bi-download"></i> Export Revenue CSV
+  </a>
+  <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.audit_log') }}">
+    <i class="bi bi-shield-check"></i> Audit Log
+  </a>
+</div>
+{% endblock %}
+{% block admin_content %}
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="pathmap-card p-3 h-100">
+      <div class="text-muted small">Active Users (90d)</div>
+      <div class="display-6 fw-bold">{{ active_users_90d }}</div>
+      <div class="text-success small">{{ premium_users }} premium</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="pathmap-card p-3 h-100">
+      <div class="text-muted small">Total Users</div>
+      <div class="display-6 fw-bold">{{ total_users }}</div>
+      <div class="text-muted small">{{ pending_gdpr }} pending deletions</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="pathmap-card p-3 h-100">
+      <div class="text-muted small">Revenue (30d)</div>
+      <div class="display-6 fw-bold">₹{{ '%.0f'|format(revenue_30d) }}</div>
+      <div class="text-muted small">Subscription payments</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="pathmap-card p-3 h-100">
+      <div class="text-muted small">Providers / Apps</div>
+      <div class="display-6 fw-bold">{{ provider_count }}</div>
+      <div class="text-muted small">{{ pending_applications }} pending</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="pathmap-card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <div class="text-muted small">Revenue trend</div>
+          <div class="fw-bold">Subscriptions by month</div>
+        </div>
+      </div>
+      <canvas id="revenueChart" class="admin-chart"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="pathmap-card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <div class="text-muted small">Session bookings</div>
+          <div class="fw-bold">Bookings by month</div>
+        </div>
+      </div>
+      <canvas id="bookingChart" class="admin-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="pathmap-card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <div class="text-muted small">Journeys</div>
+          <div class="fw-bold">Published vs drafts</div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="flex-grow-1">
+          <div class="d-flex justify-content-between text-muted small">
+            <span>Published</span>
+            <span>{{ published_journeys }}</span>
+          </div>
+          <div class="progress mb-2" style="height:8px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ published_journeys|int * 100 / (published_journeys + unpublished_journeys + 1e-9) }}%"></div>
+          </div>
+          <div class="d-flex justify-content-between text-muted small">
+            <span>Unpublished</span>
+            <span>{{ unpublished_journeys }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="pathmap-card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <div class="text-muted small">Top performing journeys</div>
+          <div class="fw-bold">Most viewed stories</div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Journey</th>
+              <th>Outcome</th>
+              <th class="text-end">Views</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for journey, view_count in top_journeys %}
+            <tr>
+              <td class="fw-semibold">{{ journey.summary[:60] }}{% if journey.summary|length > 60 %}…{% endif %}</td>
+              <td><span class="badge bg-light text-dark">{{ journey.outcome_status }}</span></td>
+              <td class="text-end fw-bold">{{ view_count }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-muted">No journey view data yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+  (function () {
+    const revenueSeries = {{ revenue_series|tojson }};
+    const bookingSeries = {{ booking_series|tojson }};
+
+    function ensureChartLoaded() {
+      if (window.Chart) return Promise.resolve(window.Chart);
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+        script.async = true;
+        script.onload = () => resolve(window.Chart);
+        script.onerror = () => reject(new Error('Chart.js failed to load'));
+        document.head.appendChild(script);
+      });
+    }
+
+    function sanitizeSeries(series, zeroLabel) {
+      if (!Array.isArray(series)) return [[zeroLabel, 0]];
+      const cleaned = series
+        .filter((item) => Array.isArray(item) && item.length >= 2)
+        .map(([label, value]) => [String(label), Number(value) || 0]);
+      if (!cleaned.length) {
+        const now = new Date();
+        const label = zeroLabel || now.toISOString().slice(0, 7);
+        return [[label, 0]];
+      }
+      cleaned.sort((a, b) => a[0].localeCompare(b[0]));
+      return cleaned;
+    }
+
+    function fillMissingMonths(series) {
+      if (series.length < 2) return series;
+      const map = new Map(series.map(([label, value]) => [label, value]));
+      const parseMonth = (label) => new Date(`${label}-01T00:00:00Z`);
+      const start = parseMonth(series[0][0]);
+      const end = parseMonth(series[series.length - 1][0]);
+      const filled = [];
+      const cursor = new Date(start);
+      while (cursor <= end) {
+        const label = cursor.toISOString().slice(0, 7);
+        filled.push([label, map.get(label) || 0]);
+        cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+      }
+      return filled;
+    }
+
+    function renderLineChart(id, series, label) {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const labels = series.map(([m]) => m);
+      const values = series.map(([_, v]) => v);
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data: values,
+            tension: 0.32,
+            borderColor: '#2E86C1',
+            backgroundColor: 'rgba(46,134,193,0.12)',
+            borderWidth: 2,
+            pointRadius: 3,
+            fill: true
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } },
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    function renderBarChart(id, series, label) {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const labels = series.map(([m]) => m);
+      const values = series.map(([_, v]) => v);
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data: values,
+            backgroundColor: '#1A5276',
+            borderRadius: 4,
+            maxBarThickness: 38
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } },
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      ensureChartLoaded()
+        .then(() => {
+          const revenue = fillMissingMonths(sanitizeSeries(revenueSeries, 'This month'));
+          const bookings = fillMissingMonths(sanitizeSeries(bookingSeries, 'This month'));
+          renderLineChart('revenueChart', revenue, 'INR');
+          renderBarChart('bookingChart', bookings, 'Bookings');
+        })
+        .catch((err) => {
+          console.error('Admin dashboard charts failed to load', err);
+        });
+    });
+  })();
+</script>
+{% endblock %}

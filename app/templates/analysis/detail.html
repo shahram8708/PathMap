@@ -1,0 +1,201 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}Dashboard / Skill Transfer Analyzer / {{ origin_role.title }} → {{ target_role.title }}{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex flex-column flex-lg-row align-items-start justify-content-between mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ origin_role.title }} → {{ target_role.title }}</h1>
+    <div class="small text-muted">Analyzed on {{ analysis.created_at.strftime('%b %d, %Y') }}</div>
+  </div>
+  <div class="d-flex gap-2 mt-3 mt-lg-0">
+    <a class="btn btn-outline-secondary" href="{{ url_for('analysis.analysis_hub') }}">Back to All Analyses</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('analysis.analysis_detail', analysis_id=analysis.id) }}">Save Analysis</a>
+    <a class="btn btn-primary" href="{{ url_for('planner.roadmap_form') }}">Generate Roadmap →</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card pathmap-card p-3" id="skill-adjustment-panel" data-adjust-url="{{ url_for('analysis.adjust_skills', analysis_id=analysis.id) }}">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="fw-bold"><i class="bi bi-sliders me-1"></i>Adjust Your Skill Ratings</div>
+      </div>
+      <div class="text-muted small mb-3">Slide to adjust how you rated skills relevant to this target role. The map updates in real time.</div>
+      {% for skill in top_skills_for_slider %}
+        {% set zone_class = 'bg-secondary' %}
+        {% if skill.current_zone == 'direct' %}{% set zone_class = 'bg-success' %}{% elif skill.current_zone == 'partial' %}{% set zone_class = 'bg-warning' %}{% elif skill.current_zone == 'gap' %}{% set zone_class = 'bg-danger' %}{% endif %}
+        <div class="skill-adjustment-row mb-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="fw-bold">{{ skill.skill_name }}</div>
+            <span class="skill-zone-dot {{ zone_class }}"></span>
+          </div>
+          <input type="range" min="0" max="4" step="1" value="{{ skill.current_rating }}" class="form-range skill-adjustment-slider" data-skill-slider data-skill-name="{{ skill.skill_name }}">
+          <div class="d-flex justify-content-between small text-muted">
+            <span>{{ skill.importance_label }} importance</span>
+            <span>{{ skill.current_zone|capitalize }}</span>
+          </div>
+        </div>
+      {% endfor %}
+      <button type="button" class="btn btn-outline-secondary w-100 mt-2" id="reset-ratings-btn">Reset to Original Ratings</button>
+      <div class="analysis-summary-mini mt-3">
+        <div class="d-flex justify-content-between"><span>Transfer %</span><span id="summary-transfer">{{ '%.1f' % (transfer_score or 0) }}</span></div>
+        <div class="d-flex justify-content-between"><span>Gap %</span><span id="summary-gap">{{ '%.1f' % (gap_score or 0) }}</span></div>
+        <div class="d-flex justify-content-between"><span>Est. Learning Hours</span><span id="summary-hours">{{ estimated_learning_hours or 0 }}</span></div>
+        <div class="d-flex justify-content-between"><span>Feasibility Score</span><span id="summary-feasibility">{{ feasibility_score or 0 }}</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card pathmap-card p-3">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="fw-bold">Your Skill Transfer Map</div>
+        </div>
+        <div class="skills-stats-bar">
+          <span class="text-success">Direct: <strong>{{ (direct_skills or [])|length }}</strong></span>
+          <span class="text-warning">Partial: <strong>{{ (partial_skills or [])|length }}</strong></span>
+          <span class="text-danger">New: <strong>{{ (gap_skills or [])|length }}</strong></span>
+        </div>
+      </div>
+      <div class="skills-segmented-bar mt-2 mb-3" id="skills-segmented-bar">
+        <div class="segment-direct"></div>
+        <div class="segment-partial"></div>
+        <div class="segment-gap"></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="skill-map-zone-card direct">
+            <div class="zone-header">Direct Transfer — These skills carry over.</div>
+            <div class="zone-body" id="direct-zone"></div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="skill-map-zone-card partial">
+            <div class="zone-header">Partial Transfer — These need development but you're not starting from zero.</div>
+            <div class="zone-body" id="partial-zone"></div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="skill-map-zone-card gap">
+            <div class="zone-header">Skill Gaps — New skills that require focused development.</div>
+            <div class="zone-body" id="gap-zone"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pathmap-card mt-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold">Gap Skills Deep Dive</span>
+        <button class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#gapTable" aria-expanded="false">View Detailed Gap Analysis</button>
+      </div>
+      <div class="collapse" id="gapTable">
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead>
+              <tr>
+                <th>Skill</th>
+                <th class="text-center">Importance</th>
+                <th class="text-center">Your Rating</th>
+                <th>Top Resource</th>
+                <th class="text-end">Est. Hours</th>
+                <th class="text-center">Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for skill in gap_skills %}
+                {% set top_res = (skill.learning_resources or [None])[0] %}
+                <tr>
+                  <td>{{ skill.skill_name }}</td>
+                  <td class="text-center">
+                    <div class="fw-semibold">{{ (skill.importance_weight * 100)|round(0) }}%</div>
+                    <div class="text-muted small">{{ skill.importance_label }} importance</div>
+                  </td>
+                  <td class="text-center">{{ skill.confidence_label }}</td>
+                  <td>
+                    {% if top_res %}
+                      <div class="fw-semibold"><a href="{{ top_res.url }}" target="_blank">{{ top_res.title }}</a></div>
+                      <div class="text-muted small">{{ top_res.provider or top_res.format }}</div>
+                    {% else %}
+                      <span class="text-muted">No resource added</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">{% if top_res %}{{ top_res.estimated_hours or 'n/a' }}{% else %}—{% endif %}</td>
+                  <td class="text-center">{% if top_res %}{{ top_res.cost_tier or 'n/a' }}{% else %}—{% endif %}</td>
+                </tr>
+              {% endfor %}
+              {% if not gap_skills %}
+                <tr>
+                  <td colspan="6" class="text-muted text-center">No gap skills detected for this target role.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="market-insights-panel p-3 mt-3">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="fw-bold"><i class="bi bi-wifi me-1"></i>Live Market Insights: {{ target_role.title }}</div>
+        <button id="load-market-btn" class="btn btn-outline-primary btn-sm" data-market-url="{{ url_for('analysis.market_insights_ajax', analysis_id=analysis.id) }}">Load Market Data</button>
+      </div>
+      <div class="small text-muted mb-2">Powered by AI</div>
+      <div id="market-insights-content" class="mt-2 markdown-content">Click to load the latest demand, salary, and hiring trends.</div>
+    </div>
+
+    <div class="card pathmap-card p-3 mt-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <div class="fw-bold">Feasibility Score for This Pivot</div>
+          <div class="text-muted small">Composite score and the five drivers of feasibility.</div>
+        </div>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('planner.feasibility_detail', analysis_id=analysis.id) }}">See Full Feasibility Analysis →</a>
+      </div>
+      <div class="display-5 fw-bold">{{ feasibility_score or 0 }}</div>
+      <div class="text-muted mb-2">{{ analysis.feasibility_narrative or 'Feasibility calculated from your profile and gaps.' }}</div>
+      {% if feasibility_breakdown %}
+        {% for key, item in feasibility_breakdown.items() %}
+          <div class="d-flex align-items-center mb-1">
+            <div class="me-2" style="width:160px;">{{ item.label }}</div>
+            <div class="flex-grow-1">
+              <div class="progress" style="height:8px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ (item.score * 100)|round(0) }}%;"></div>
+              </div>
+            </div>
+            <div class="ms-2 small text-muted">{{ (item.score * 100)|round(0) }}%</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+      <div class="d-flex gap-2 mt-2">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('analysis.analysis_hub') }}">Back</a>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('planner.feasibility_detail', analysis_id=analysis.id) }}">What If? Adjust assumptions →</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/skill_map.js') }}"></script>
+<script>
+  const initialSkillData = {{ {
+    'transfer_score': transfer_score or 0,
+    'gap_score': gap_score or 0,
+    'direct_skills': direct_skills or [],
+    'partial_skills': partial_skills or [],
+    'gap_skills': gap_skills or [],
+    'direct_count': (direct_skills or [])|length,
+    'partial_count': (partial_skills or [])|length,
+    'gap_count': (gap_skills or [])|length,
+    'total_skills_required': ((direct_skills or [])|length + (partial_skills or [])|length + (gap_skills or [])|length),
+    'estimated_learning_hours': estimated_learning_hours or 0,
+    'feasibility_score': feasibility_score or 0
+  }|tojson }};
+  document.addEventListener('DOMContentLoaded', () => {
+    initSkillMap(initialSkillData);
+    initSkillAdjustmentSliders();
+    initGapSkillExpansion();
+    const marketBtn = document.getElementById('load-market-btn');
+    if (marketBtn) marketBtn.addEventListener('click', () => loadMarketInsights({{ analysis.id }}));
+  });
+</script>
+{% endblock %}

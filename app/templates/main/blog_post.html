@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block meta_description %}<meta name="description" content="{{ post.excerpt }}">{% endblock %}
+{% block content %}
+
+{% set cover_seed = range(1000000) | random %}
+{% set has_real_cover = post.cover_image_url and ('cdn.pathmap.in/blog/cover.jpg' not in post.cover_image_url|lower) %}
+{% set cover_image = has_real_cover and post.cover_image_url or 'https://picsum.photos/536/354?random=' ~ cover_seed %}
+{% set cover_style = 'linear-gradient(135deg,rgba(26,82,118,0.35),rgba(46,134,193,0.35)), url(' ~ cover_image ~ ')' %}
+
+<section class="py-4">
+	<div class="container">
+		<a class="text-muted" href="{{ url_for('main.blog_index') }}">← Back to Blog</a>
+	</div>
+</section>
+
+<section class="pb-5">
+	<div class="container">
+		<div class="blog-card mb-4">
+			<div class="blog-cover" style="background: {{ cover_style }}; background-size: cover; background-position: center; height: 240px;"></div>
+		</div>
+		<h1 class="fw-bold">{{ post.title }}</h1>
+		<div class="d-flex flex-wrap gap-3 text-muted mb-3">
+			<span>{{ post.published_at.strftime('%b %d, %Y') if post.published_at else 'Unpublished' }}</span>
+			<span>•</span>
+			<span>{{ reading_time }} min read</span>
+			<span>•</span>
+			<span>{{ post.author.display_name if post.author else 'PathMap Editorial' }}</span>
+		</div>
+		<div class="mb-3 d-flex flex-wrap gap-2">
+			{% if post.tags %}
+				{% for tag in post.tags.split(',') %}
+					{% if tag.strip() %}<span class="tag-pill">{{ tag.strip() }}</span>{% endif %}
+				{% endfor %}
+			{% endif %}
+		</div>
+		<article class="pathmap-card p-4 mb-5">
+			<div class="markdown-content blog-post">{{ post.content | markdown_trusted }}</div>
+		</article>
+
+		{% if related_posts %}
+		{% set related_seed = range(1000000) | random %}
+		<div class="mb-5">
+			<h4 class="fw-bold mb-3">Continue Reading</h4>
+			<div class="row g-4">
+				{% for item in related_posts %}
+				{% set item_has_real_cover = item.cover_image_url and ('cdn.pathmap.in/blog/cover.jpg' not in item.cover_image_url|lower) %}
+				{% set item_cover_image = item_has_real_cover and item.cover_image_url or 'https://picsum.photos/536/354?random=' ~ related_seed ~ '-' ~ loop.index0 %}
+				{% set item_cover_style = 'linear-gradient(135deg,rgba(26,82,118,0.35),rgba(46,134,193,0.35)), url(' ~ item_cover_image ~ ')' %}
+				<div class="col-md-6">
+					<div class="blog-card h-100">
+						<div class="blog-cover" style="background: {{ item_cover_style }}; background-size: cover; background-position: center; height: 160px;"></div>
+						<div class="p-3">
+							<p class="text-muted small mb-1">{{ item.published_at.strftime('%b %d, %Y') if item.published_at else 'Unpublished' }}</p>
+							<h5 class="fw-bold">{{ item.title }}</h5>
+							<p class="text-muted">{{ (item.excerpt or item.content[:120])[:120] }}{% if (item.excerpt or item.content)|length > 120 %}...{% endif %}</p>
+							<a class="fw-bold text-accent" href="{{ url_for('main.blog_post', slug=item.slug) }}">Read Article →</a>
+						</div>
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+		{% endif %}
+
+		<div class="pathmap-card p-4 text-center">
+			<h4 class="fw-bold mb-2">Ready to stop paralysis and start your pivot?</h4>
+			<p class="text-muted mb-3">Join PathMap to turn insights into action.</p>
+			<a class="btn btn-pathmap-primary" href="{{ url_for('auth.signup') }}">Start Free</a>
+		</div>
+	</div>
+</section>
+
+{% endblock %}

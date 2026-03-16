@@ -1,0 +1,52 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.venv
+venv/
+ENV/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+.python-version
+
+# Unit test / coverage
+.coverage
+htmlcov/
+.cache/
+.pytest_cache/
+
+# Logs
+logs/
+*.log
+
+# Flask / local state
+instance/
+*.db
+*.sqlite3
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node / front-end build outputs
+node_modules/
+*.map
+
+# Generated assets
+static/build/
+
+# Local settings
+*.local

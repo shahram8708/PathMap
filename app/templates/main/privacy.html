@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Privacy Policy{% endblock %}
+{% block content %}
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <h1 class="fw-bold">Privacy Policy</h1>
+    <p class="text-muted">Last updated: January 2025</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="accordion" id="privacyAccordion">
+      {% set items = [
+        {'title':'Data We Collect','body':'We collect account information (name, email, password hash), assessment responses, usage data (pages viewed, features used), and limited payment metadata from Razorpay (payment status, subscription identifiers). We do not store full card details.'},
+        {'title':'How We Use Data','body':'We use your data to deliver the PathMap service, personalize recommendations, provide support, and improve our features. We do not sell your data to third parties.'},
+        {'title':'Storage and Security','body':'Data is stored in encrypted databases with role-based access. Passwords are hashed. Payment processing is handled by Razorpay, which meets PCI-DSS requirements.'},
+        {'title':'Third-Party Services','body':'Payments are processed by Razorpay. Email delivery uses our configured mail provider. Each third party receives only the data required to perform their service.'},
+        {'title':'Your Rights','body':'You may request access, correction, or deletion of your data (GDPR Article 17). Contact privacy@pathmap.in to exercise these rights. We will respond within 30 days.'},
+        {'title':'Data Retention','body':'Account and assessment data are retained while your account is active. If you request deletion, we remove personal data except where retention is required by law (e.g., payment records).'},
+        {'title':'Cookies','body':'We use cookies for session management, security (CSRF), and analytics. You can control cookies in your browser. Disabling essential cookies may affect functionality.'},
+        {'title':'Contact','body':'For privacy concerns, email privacy@pathmap.in. Include your registered email and request type (access, correction, deletion).'}
+      ] %}
+      {% for item in items %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="privacy-{{ loop.index }}">
+          <button class="accordion-button {{ 'collapsed' if not loop.first }}" type="button" data-bs-toggle="collapse" data-bs-target="#privacy-collapse-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="privacy-collapse-{{ loop.index }}">
+            {{ item.title }}
+          </button>
+        </h2>
+        <div id="privacy-collapse-{{ loop.index }}" class="accordion-collapse collapse {{ 'show' if loop.first }}" aria-labelledby="privacy-{{ loop.index }}" data-bs-parent="#privacyAccordion">
+          <div class="accordion-body">{{ item.body }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

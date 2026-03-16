@@ -1,0 +1,60 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('resources.library') }}">Learning Resources</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">My Bookmarks</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip secondary" href="{{ url_for('resources.library') }}"><i class="bi bi-arrow-left"></i> Library</a>
+  <a class="cta-chip" href="{{ url_for('analysis.analysis_hub') }}"><i class="bi bi-diagram-3"></i> Skill Analysis</a>
+  <a class="cta-chip" href="{{ url_for('progress.progress_dashboard') }}"><i class="bi bi-graph-up"></i> Progress</a>
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h4 mb-1"><i class="bi bi-bookmark-fill me-2 text-primary"></i>My Bookmarked Resources</h1>
+    <div class="text-muted">{{ bookmarks|length }} resources bookmarked</div>
+    <div class="text-muted small">Free plan: up to 5 bookmarks. Premium: unlimited.</div>
+  </div>
+</div>
+
+{% if bookmarks %}
+  <div class="list-group">
+    {% for bookmark in bookmarks %}
+      <div class="list-group-item d-flex align-items-start justify-content-between">
+        <div>
+          <div class="fw-bold">{{ bookmark.resource.title }}</div>
+          <div class="text-muted small">{{ bookmark.resource.provider }} · {{ bookmark.resource.skill.name }}</div>
+          <div class="d-flex flex-wrap gap-1 mt-2">
+            <span class="badge text-dark format-badge {{ bookmark.resource.format|lower }}">{{ bookmark.resource.format|capitalize }}</span>
+            <span class="badge text-dark cost-badge {% if bookmark.resource.cost_tier|lower == 'free' %}free{% elif bookmark.resource.cost_tier|lower == 'premium' %}premium-resource{% else %}low-cost{% endif %}">{{ bookmark.resource.cost_tier|capitalize }}</span>
+            <span class="badge bg-light text-muted">~{{ bookmark.resource.estimated_hours }}h</span>
+            <span class="text-muted small">Bookmarked {{ bookmark.bookmarked_at.strftime('%b %d, %Y') }}</span>
+          </div>
+        </div>
+        <div class="d-flex flex-column gap-2 align-items-end">
+          <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ bookmark.resource.url }}">View Resource →</a>
+          <button class="btn btn-sm btn-outline-danger resource-bookmark-btn" data-resource-id="{{ bookmark.resource.id }}">Remove</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card p-4 text-center shadow-sm">
+    <h5>You haven't bookmarked any resources yet.</h5>
+    <p class="text-muted">Browse the library and save resources for easy access.</p>
+    <a class="btn btn-primary" href="{{ url_for('resources.library') }}">Browse Library →</a>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/marketplace.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', function(){ initBookmarkToggle(); });</script>
+{% endblock %}

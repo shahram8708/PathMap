@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Create Account{% endblock %}
+{% block content %}
+<section class="auth-page">
+  <div class="auth-card">
+    <a href="{{ url_for('main.index') }}" class="auth-logo text-decoration-none">
+      <span style="color: #1A5276;">Path</span><span style="color: #2E86C1;">Map</span>
+    </a>
+    <h2 class="mb-2">Create your free account</h2>
+    <p class="text-muted mb-4">Start your career pivot journey today.</p>
+
+    <form method="POST" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      <div class="mb-3">
+        <label for="first_name" class="form-label">First Name</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person"></i></span>
+          {{ form.first_name(class_='form-control form-control-lg', id='first_name', placeholder='Your first name') }}
+        </div>
+        {% if form.first_name.errors %}
+          <div class="invalid-feedback d-block">{{ form.first_name.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email Address</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          {{ form.email(class_='form-control form-control-lg', id='email', placeholder='you@example.com') }}
+        </div>
+        {% if form.email.errors %}
+          <div class="invalid-feedback d-block">{{ form.email.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          {{ form.password(class_='form-control form-control-lg', id='password', placeholder='Create a strong password', **{'data-strength': 'signupStrength'}) }}
+          <button class="btn btn-outline-secondary" type="button" data-toggle-password="password">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <div class="password-strength" aria-hidden="true">
+          <div class="password-strength-bar" id="signupStrength"></div>
+        </div>
+        {% if form.password.errors %}
+          <div class="invalid-feedback d-block">{{ form.password.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-4">
+        <label for="confirm_password" class="form-label">Confirm Password</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock-check"></i></span>
+          {{ form.confirm_password(class_='form-control form-control-lg', id='confirm_password', placeholder='Re-enter your password') }}
+        </div>
+        {% if form.confirm_password.errors %}
+          <div class="invalid-feedback d-block">{{ form.confirm_password.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div class="d-grid mb-3">
+        {{ form.submit(class_='btn btn-navy btn-lg') }}
+      </div>
+      <p class="text-center mb-0">Already have an account? <a href="{{ url_for('auth.login') }}">Log In →</a></p>
+    </form>
+  </div>
+</section>
+{% endblock %}

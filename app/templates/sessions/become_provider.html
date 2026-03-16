@@ -1,0 +1,143 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('sessions.marketplace') }}">Shadow Sessions</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">Become a Provider</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip secondary" href="{{ url_for('sessions.marketplace') }}"><i class="bi bi-arrow-left"></i> Back to Marketplace</a>
+  <a class="cta-chip" href="{{ url_for('sessions.my_bookings') }}"><i class="bi bi-calendar-event"></i> My Bookings</a>
+  <a class="cta-chip" href="{{ url_for('planner.planner_hub') }}"><i class="bi bi-compass"></i> Planner</a>
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<div class="mb-4">
+  <h1 class="h3 mb-1">Share Your Career Experience</h1>
+  <p class="text-muted">PathMap providers earn ₹500–₹17,500 per session by sharing their career expertise with professionals making the same transition you made.</p>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="provider-value-card card p-3 h-100 shadow-sm">
+      <h6>Earn while helping</h6>
+      <p class="text-muted mb-0">Set your rate between ₹500 and ₹20,000. Providers typically earn ₹3,500–₹7,000 per session.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="provider-value-card card p-3 h-100 shadow-sm">
+      <h6>Flexible commitment</h6>
+      <p class="text-muted mb-0">Choose your own schedule. Accept bookings only when you are available.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="provider-value-card card p-3 h-100 shadow-sm">
+      <h6>Meaningful impact</h6>
+      <p class="text-muted mb-0">Help someone avoid years of confusion by sharing an honest view of your role.</p>
+    </div>
+  </div>
+</div>
+<div class="commission-transparency-card card p-3 mb-4 shadow-sm">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <div class="fw-bold">Commission transparency</div>
+      <div class="text-muted">PathMap charges 12.5% per booking. If you set your rate at ₹4,000, you receive ₹3,500 per session.</div>
+    </div>
+    <div class="price-calculator-widget text-end">
+      <div class="small text-muted">Your earnings per session</div>
+      <div class="h5 mb-0" id="provider-earnings-display">₹0</div>
+      <div class="small text-muted">PathMap fee: <span id="pathmap-fee-display">₹0</span></div>
+      <div class="small text-muted" id="earnings-example-monthly"></div>
+    </div>
+  </div>
+</div>
+
+{% if pending_application %}
+  <div class="alert alert-info">Your provider application is under review. We will respond within 3 business days.</div>
+{% elif form %}
+  <form method="post" action="{{ url_for('sessions.submit_provider_application') }}" class="needs-validation" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="card p-3 mb-3 shadow-sm">
+      <h5>Your Professional Identity</h5>
+      <div class="row g-3 mt-2">
+        <div class="col-md-6">
+          {{ form.current_role_id.label(class='form-label') }}
+          {{ form.current_role_id(class='form-select') }}
+        </div>
+        <div class="col-md-6">
+          {{ form.proposed_display_name.label(class='form-label') }}
+          {{ form.proposed_display_name(class='form-control') }}
+        </div>
+        <div class="col-md-6">
+          {{ form.years_in_target_role.label(class='form-label') }}
+          {{ form.years_in_target_role(class='form-control') }}
+        </div>
+        <div class="col-md-6">
+          {{ form.industries_covered.label(class='form-label') }}
+          {{ form.industries_covered(class='form-control') }}
+        </div>
+      </div>
+    </div>
+    <div class="card p-3 mb-3 shadow-sm">
+      <h5>Your Story</h5>
+      <div class="mb-3">
+        {{ form.proposed_bio.label(class='form-label') }}
+        {{ form.proposed_bio(class='form-control', rows='4') }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Did you make a career pivot yourself? Share your journey.</label>
+        <textarea class="form-control" name="transition_story" rows="3" placeholder="Optional"></textarea>
+      </div>
+    </div>
+    <div class="card p-3 mb-3 shadow-sm">
+      <h5>Your Session Design</h5>
+      <div class="mb-3">
+        {{ form.proposed_session_description.label(class='form-label') }}
+        {{ form.proposed_session_description(class='form-control', rows='4') }}
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          {{ form.session_format.label(class='form-label') }}
+          {{ form.session_format(class='form-control') }}
+        </div>
+        <div class="col-md-6">
+          {{ form.proposed_price_inr.label(class='form-label') }}
+          {{ form.proposed_price_inr(class='form-control', id='proposed_price_inr') }}
+        </div>
+      </div>
+    </div>
+    <div class="card p-3 mb-3 shadow-sm">
+      <h5>Why You</h5>
+      <div class="mb-3">
+        {{ form.why_good_provider.label(class='form-label') }}
+        {{ form.why_good_provider(class='form-control', rows='4') }}
+      </div>
+      <div class="mb-3">
+        {{ form.linkedin_url.label(class='form-label') }}
+        {{ form.linkedin_url(class='form-control') }}
+      </div>
+    </div>
+    <div class="card p-3 mb-3 shadow-sm">
+      <h5>Terms</h5>
+      <div class="form-check">
+        {{ form.consent(class='form-check-input', id='consent') }}
+        <label class="form-check-label" for="consent">{{ form.consent.label.text }}</label>
+      </div>
+    </div>
+    <div class="d-flex justify-content-end">
+      <button type="submit" class="btn btn-primary">Submit Application</button>
+    </div>
+  </form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/marketplace.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() { initProviderPriceCalculator(); });
+</script>
+{% endblock %}

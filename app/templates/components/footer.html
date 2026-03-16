@@ -1,0 +1,50 @@
+<footer class="footer-section mt-auto pt-5 pb-4">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-3 col-md-6">
+        <div class="d-flex align-items-center mb-3">
+          <span class="footer-logo-mark me-2">PM</span>
+          <span class="fw-bold text-white fs-5">PathMap</span>
+        </div>
+        <p class="text-white-50 mb-3">Stop researching. Start deciding.</p>
+        <div class="d-flex gap-3">
+          <a class="footer-icon" href="https://www.linkedin.com" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          <a class="footer-icon" href="https://twitter.com" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+          <a class="footer-icon" href="https://github.com" aria-label="GitHub"><i class="bi bi-github"></i></a>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <h6 class="footer-heading">Product</h6>
+        <ul class="list-unstyled footer-links">
+          <li><a href="{{ url_for('main.features') }}">Features</a></li>
+          <li><a href="{{ url_for('main.how_it_works') }}">How It Works</a></li>
+          <li><a href="{{ url_for('main.pricing') }}">Pricing</a></li>
+          <li><a href="{{ url_for('main.for_teams') }}">For Teams</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <h6 class="footer-heading">Resources</h6>
+        <ul class="list-unstyled footer-links">
+          <li><a href="{{ url_for('main.blog_index') }}">Blog</a></li>
+          <li><a href="{{ url_for('journeys.explorer') }}">Journey Explorer</a></li>
+          <li><a href="{{ url_for('journeys.submit_journey_form') }}">Submit a Journey</a></li>
+          <li><a href="#">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <h6 class="footer-heading">Company</h6>
+        <ul class="list-unstyled footer-links">
+          <li><a href="{{ url_for('main.about') }}">About</a></li>
+          <li><a href="{{ url_for('main.contact') }}">Contact</a></li>
+          <li><a href="{{ url_for('main.privacy') }}">Privacy Policy</a></li>
+          <li><a href="{{ url_for('main.terms') }}">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-divider mt-4 mb-3"></div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap text-white-50 small">
+      <span>© 2026 PathMap Technologies Pvt. Ltd. All rights reserved.</span>
+      <span>Made with ❤️ in India 🇮🇳</span>
+    </div>
+  </div>
+</footer>

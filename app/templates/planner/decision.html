@@ -1,0 +1,325 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Decision Framework{% endblock %}
+{% block breadcrumb %}Dashboard / Pivot Planner / Decision Framework{% endblock %}
+{% block dashboard_content %}
+{% set existing_data = decision_context.existing_decision_data or {} %}
+{% set step1_data = existing_data.get('step_1', {}) %}
+{% set step2_data = existing_data.get('step_2', {}) %}
+{% set step3_data = existing_data.get('step_3', {}) %}
+{% set step4_data = existing_data.get('step_4', {}) %}
+{% set step5_data = existing_data.get('step_5', {}) %}
+<div class="mb-4 p-4 rounded-3 shadow-sm" style="background: linear-gradient(110deg, #1A5276, #2E86C1); color: #fff;">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+    <div>
+      <div class="text-uppercase small fw-semibold">Decision Confidence Framework</div>
+      <h1 class="mb-1">From analysis to a committed pivot</h1>
+      <p class="mb-0">Work through five steps to choose your direction with clarity and lock in your commitment.</p>
+    </div>
+    <div class="text-end">
+      <div class="small text-uppercase opacity-75">Target role</div>
+      <div class="fw-bold">{{ decision_context.target_role }}</div>
+      <div class="small">from {{ decision_context.origin_role }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      {% set step_labels = ['Define the real decision', 'Values alignment', 'Test assumptions', '10/10/10 future view', 'Commit to a direction'] %}
+      {% for step in range(1, total_steps + 1) %}
+        {% set completed = existing_data.get('step_' ~ step) %}
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2 p-2 rounded-3 {% if step == current_step %}bg-light border border-primary{% else %}bg-white border{% endif %}">
+            <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; {% if completed %}background:#1A5276;color:#fff;{% elif step == current_step %}background:#2E86C1;color:#fff;{% else %}background:#e9ecef;color:#1A5276;{% endif %}">{{ step }}</div>
+            <div>
+              <div class="small text-muted">Step {{ step }}</div>
+              <div class="fw-semibold small">{{ step_labels[step - 1] }}</div>
+            </div>
+            {% if completed %}<i class="bi bi-check-circle-fill text-success ms-auto"></i>{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if current_step == 1 %}
+    <form method="POST" action="{{ url_for('planner.decision_step_save', step=1) }}" class="pathmap-card p-4 shadow-sm rounded-3">
+      {{ step_form.hidden_tag() }}
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">Step 1 - Define the real decision</h5>
+        <span class="badge bg-primary">1/5</span>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">What is the real decision you need to make?</label>
+        <input type="text" name="real_decision" value="{{ step1_data.get('real_decision', '') }}" class="form-control" placeholder="e.g., Commit to Product Manager pivot for the next 6 months" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">List your pivot options</label>
+        <div id="decision-options" class="d-flex flex-column gap-2">
+          {% set options = step1_data.get('decision_options', []) %}
+          {% if not options %}
+            {% set options = ['Primary option', 'Alternative option'] %}
+          {% endif %}
+          {% for opt in options %}
+            <div class="input-group">
+              <span class="input-group-text">{{ loop.index }}</span>
+              <input type="text" name="decision_options[]" value="{{ opt }}" class="form-control" placeholder="Option {{ loop.index }}">
+            </div>
+          {% endfor %}
+        </div>
+        <button type="button" class="btn btn-link mt-2 p-0" id="add-option"><i class="bi bi-plus-circle me-1"></i>Add another option</button>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">What is at stake if you choose wrong?</label>
+        <textarea name="decision_stakes" rows="3" class="form-control" placeholder="Capture the risks and opportunity costs">{{ step1_data.get('decision_stakes', '') }}</textarea>
+      </div>
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-primary" type="submit" style="background-color:#1A5276;border-color:#1A5276;">Save and continue -></button>
+      </div>
+    </form>
+    {% elif current_step == 2 %}
+    <form method="POST" action="{{ url_for('planner.decision_step_save', step=2) }}" class="pathmap-card p-4 shadow-sm rounded-3">
+      {{ step_form.hidden_tag() }}
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">Step 2 - Values alignment check</h5>
+        <span class="badge bg-primary">2/5</span>
+      </div>
+      {% set options = step1_data.get('decision_options', ['Option A', 'Option B']) %}
+      {% if decision_context.top_values %}
+        {% for value_name in decision_context.top_values[:5] %}
+          {% set selected = (step2_data.get('values_check', {}) or {}).get(value_name, '') %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Which option best honors "{{ value_name }}"?</label>
+            <select class="form-select" name="value_{{ loop.index0 }}">
+              <option value="">Select an option</option>
+              {% for opt in options %}
+                <option value="{{ opt }}" {% if selected == opt %}selected{% endif %}>{{ opt }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="alert alert-info">Complete the values module to see your top five values here.</div>
+      {% endif %}
+      <div class="d-flex justify-content-between align-items-center">
+        <a class="btn btn-outline-secondary" href="{{ url_for('planner.decision_framework', step=1) }}"><- Back</a>
+        <button class="btn btn-primary" type="submit" style="background-color:#1A5276;border-color:#1A5276;">Save and continue -></button>
+      </div>
+    </form>
+    {% elif current_step == 3 %}
+    <form method="POST" action="{{ url_for('planner.decision_step_save', step=3) }}" class="pathmap-card p-4 shadow-sm rounded-3">
+      {{ step_form.hidden_tag() }}
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">Step 3 - Test key assumptions</h5>
+        <span class="badge bg-primary">3/5</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th style="width: 22%;">Option</th>
+              <th style="width: 58%;">Assumption</th>
+              <th style="width: 20%;">Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="assumption-rows">
+            {% set assumptions = step3_data.get('assumptions', []) %}
+            {% set fallback_options = step1_data.get('decision_options', ['Option A']) %}
+            {% if assumptions %}
+              {% for assumption in assumptions %}
+            <tr>
+              <td>
+                <input type="text" name="assumption_option[]" class="form-control" value="{{ assumption.get('option', '') }}" placeholder="Option name">
+              </td>
+              <td>
+                <input type="text" name="assumption_text[]" class="form-control" value="{{ assumption.get('assumption', '') }}" placeholder="What must be true?">
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <input type="range" name="assumption_confidence[]" class="form-range" min="1" max="5" step="1" value="{{ assumption.get('confidence', 3) }}" oninput="this.nextElementSibling.textContent = this.value">
+                  <span class="fw-semibold">{{ assumption.get('confidence', 3) }}</span>
+                </div>
+              </td>
+            </tr>
+              {% endfor %}
+            {% else %}
+              {% for opt in fallback_options %}
+                {% set assumption = {'option': opt, 'assumption': '', 'confidence': 3} %}
+            <tr>
+              <td>
+                <input type="text" name="assumption_option[]" class="form-control" value="{{ assumption.get('option', '') }}" placeholder="Option name">
+              </td>
+              <td>
+                <input type="text" name="assumption_text[]" class="form-control" value="{{ assumption.get('assumption', '') }}" placeholder="What must be true?">
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <input type="range" name="assumption_confidence[]" class="form-range" min="1" max="5" step="1" value="{{ assumption.get('confidence', 3) }}" oninput="this.nextElementSibling.textContent = this.value">
+                  <span class="fw-semibold">{{ assumption.get('confidence', 3) }}</span>
+                </div>
+              </td>
+            </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-link p-0 mb-3" id="add-assumption"><i class="bi bi-plus-circle me-1"></i>Add assumption</button>
+      <div class="d-flex justify-content-between align-items-center">
+        <a class="btn btn-outline-secondary" href="{{ url_for('planner.decision_framework', step=2) }}"><- Back</a>
+        <button class="btn btn-primary" type="submit" style="background-color:#1A5276;border-color:#1A5276;">Save and continue -></button>
+      </div>
+    </form>
+    {% elif current_step == 4 %}
+    <form method="POST" action="{{ url_for('planner.decision_step_save', step=4) }}" class="pathmap-card p-4 shadow-sm rounded-3">
+      {{ step_form.hidden_tag() }}
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">Step 4 - 10/10/10 future view</h5>
+        <span class="badge bg-primary">4/5</span>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">If you commit for 10 days</label>
+        <textarea name="ten_days" rows="3" class="form-control" placeholder="What will you learn or decide in the next 10 days?">{{ step4_data.get('ten_days', '') }}</textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">If you commit for 10 months</label>
+        <textarea name="ten_months" rows="3" class="form-control" placeholder="What traction will you have in 10 months?">{{ step4_data.get('ten_months', '') }}</textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">If you commit for 10 years</label>
+        <textarea name="ten_years" rows="3" class="form-control" placeholder="How does this direction compound over a decade?">{{ step4_data.get('ten_years', '') }}</textarea>
+      </div>
+      <div class="d-flex justify-content-between align-items-center">
+        <a class="btn btn-outline-secondary" href="{{ url_for('planner.decision_framework', step=3) }}"><- Back</a>
+        <button class="btn btn-primary" type="submit" style="background-color:#1A5276;border-color:#1A5276;">Save and continue →</button>
+      </div>
+    </form>
+    {% else %}
+    <form method="POST" action="{{ url_for('planner.decision_step_save', step=5) }}" class="pathmap-card p-4 shadow-sm rounded-3">
+      {{ step_form.hidden_tag() }}
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">Step 5 - Commit to a direction</h5>
+        <span class="badge bg-primary">5/5</span>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">What direction are you committing to?</label>
+        <input type="text" name="committed_direction" value="{{ step5_data.get('committed_direction', decision_context.target_role) }}" class="form-control" placeholder="e.g., Product Manager in B2B SaaS" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Why this direction for the next 90 days?</label>
+        <textarea name="commitment_note" rows="4" class="form-control" placeholder="Note your reasoning and what you will hold yourself accountable to">{{ step5_data.get('commitment_note', '') }}</textarea>
+      </div>
+      <div class="alert alert-warning d-flex align-items-start gap-2">
+        <i class="bi bi-flag"></i>
+        <div class="small">Completing this step finalizes your Decision Summary. You can still revisit later, but this will generate your commitment statement.</div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center">
+        <a class="btn btn-outline-secondary" href="{{ url_for('planner.decision_framework', step=4) }}"><- Back</a>
+        <button class="btn btn-primary" type="submit" style="background-color:#1A5276;border-color:#1A5276;">Finish and generate summary</button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="pathmap-card p-3 mb-3">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="small text-muted">Transfer score</div>
+          <div class="fw-bold fs-4 text-primary">{{ decision_context.transfer_score or '–' }}</div>
+        </div>
+        <div>
+          <div class="small text-muted">Feasibility</div>
+          <div class="fw-bold fs-4" style="color:#1A5276;">{{ decision_context.feasibility_score or '–' }}</div>
+        </div>
+      </div>
+      <hr>
+      <div class="mb-3">
+        <div class="small text-muted">Top values</div>
+        <div class="d-flex flex-wrap gap-2 mt-1">
+          {% for value in decision_context.top_values[:5] %}
+            <span class="badge bg-light text-dark border">{{ value }}</span>
+          {% endfor %}
+          {% if not decision_context.top_values %}
+            <span class="text-muted small">Values not available yet.</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="mb-3">
+        <div class="small text-muted">Dominant work style</div>
+        <div class="fw-semibold">{{ decision_context.dominant_style or 'Not captured' }}</div>
+      </div>
+      <div class="mb-3">
+        <div class="small text-muted">Constraints snapshot</div>
+        <div class="small">
+          {% if decision_context.constraints %}
+            {% for key, val in decision_context.constraints.items() %}
+              <div class="d-flex justify-content-between"><span class="text-muted">{{ key|replace('_',' ')|title }}</span><span class="fw-semibold">{{ val }}</span></div>
+            {% endfor %}
+          {% else %}
+            <div class="text-muted">No constraints recorded.</div>
+          {% endif %}
+        </div>
+      </div>
+      <div>
+        <div class="small text-muted">Gap skills focus</div>
+        <div class="d-flex flex-wrap gap-2 mt-1">
+          {% for skill in decision_context.gap_skills %}
+            <span class="badge bg-info text-dark">{{ skill.skill_name or skill }}</span>
+          {% endfor %}
+          {% if not decision_context.gap_skills %}
+            <span class="text-muted small">Add skills in your analysis to see them here.</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="pathmap-card p-3">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-lightning-charge-fill text-warning"></i>
+        <div>
+          <div class="fw-semibold mb-0">Need a refresher?</div>
+          <div class="small text-muted">Revisit your Skill Transfer Analysis anytime.</div>
+        </div>
+      </div>
+      <a class="btn btn-outline-primary w-100" href="{{ url_for('analysis.analysis_hub') }}">Open Skill Analysis</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  document.addEventListener('DOMContentLoaded', () => {
+    const optionBtn = document.getElementById('add-option');
+    const optionContainer = document.getElementById('decision-options');
+    if (optionBtn && optionContainer) {
+      optionBtn.addEventListener('click', () => {
+        const index = optionContainer.querySelectorAll('.input-group').length + 1;
+        const group = document.createElement('div');
+        group.className = 'input-group';
+        group.innerHTML = `<span class="input-group-text">${index}</span><input type="text" name="decision_options[]" class="form-control" placeholder="Option ${index}">`;
+        optionContainer.appendChild(group);
+      });
+    }
+
+    const addAssumptionBtn = document.getElementById('add-assumption');
+    const assumptionRows = document.getElementById('assumption-rows');
+    if (addAssumptionBtn && assumptionRows) {
+      addAssumptionBtn.addEventListener('click', () => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><input type="text" name="assumption_option[]" class="form-control" placeholder="Option name"></td>
+          <td><input type="text" name="assumption_text[]" class="form-control" placeholder="What must be true?"></td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" name="assumption_confidence[]" class="form-range" min="1" max="5" step="1" value="3" oninput="this.nextElementSibling.textContent = this.value">
+              <span class="fw-semibold">3</span>
+            </div>
+          </td>`;
+        assumptionRows.appendChild(row);
+      });
+    }
+  });
+</script>
+{% endblock %}

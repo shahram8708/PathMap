@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}429 — Slow Down | PathMap{% endblock %}
+{% block content %}
+<div class="error-page-container">
+  <div class="error-page-card">
+    <div class="error-code-display">429</div>
+    <div class="error-icon-container speed"><i class="bi bi-speedometer"></i></div>
+    <h2 class="error-heading">You're moving faster than we can keep up</h2>
+    <p class="error-body-text">We received too many requests from your account in a short time. Take a quick pause, then try again. If this keeps happening, our support team can help.</p>
+    <div class="error-actions">
+      <a class="btn btn-primary px-4" href="{{ url_for('main.index') }}">Return Home</a>
+      <a class="text-decoration-none" href="{{ url_for('dashboard.main_dashboard') }}">Back to Dashboard</a>
+      <a class="text-decoration-none" href="mailto:support@pathmap.in">Contact Support</a>
+    </div>
+    <div class="error-help-text mt-3">Most timeouts clear within a minute. Refresh the page after a short break.</div>
+  </div>
+</div>
+{% endblock %}

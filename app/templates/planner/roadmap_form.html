@@ -1,0 +1,115 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}90-Day Roadmap{% endblock %}
+{% block breadcrumb %}Dashboard / Pivot Planner / 90-Day Roadmap{% endblock %}
+{% block dashboard_content %}
+<div class="mb-4 p-4 rounded-3 shadow-sm" style="background: linear-gradient(115deg, #1A5276, #2E86C1); color: #fff;">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+    <div>
+      <div class="text-uppercase small fw-semibold">Roadmap Generator</div>
+      <h1 class="mb-1">Build your 90-day pivot plan</h1>
+      <p class="mb-0">Balance skills, network, and portfolio to fit the hours you can commit each week.</p>
+    </div>
+    {% if active_roadmap %}
+      <div class="alert alert-warning mb-0">
+        <div class="fw-semibold">You already have an active roadmap.</div>
+        <div class="small mb-2">Generating a new roadmap will replace it.</div>
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('planner.roadmap_detail', roadmap_id=active_roadmap.id) }}">View current roadmap</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="pathmap-card p-4 shadow-sm">
+      <form method="POST" action="{{ url_for('planner.generate_roadmap') }}" id="roadmap-form">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Select your analysis</label>
+          {{ form.analysis_id(class_='form-select') }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Hours you can commit per week (1-80)</label>
+          {{ form.hours_per_week(class_='form-control', min=1, max=80) }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Priority balance (must total 100%)</label>
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted">Skills %</label>
+              <input type="range" class="form-range" name="priority_skills" id="priority-skills" min="0" max="100" step="5" value="{{ form.priority_skills.data or 40 }}">
+              <div class="small"><span id="priority-skills-value">{{ form.priority_skills.data or 40 }}</span>%</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted">Network %</label>
+              <input type="range" class="form-range" name="priority_network" id="priority-network" min="0" max="100" step="5" value="{{ form.priority_network.data or 30 }}">
+              <div class="small"><span id="priority-network-value">{{ form.priority_network.data or 30 }}</span>%</div>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-muted">Portfolio %</label>
+              <input type="range" class="form-range" name="priority_portfolio" id="priority-portfolio" min="0" max="100" step="5" value="{{ form.priority_portfolio.data or 30 }}">
+              <div class="small"><span id="priority-portfolio-value">{{ form.priority_portfolio.data or 30 }}</span>%</div>
+            </div>
+          </div>
+          <div class="alert alert-info mt-3 mb-0" id="priority-total">Total: 0%</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Start date</label>
+          {{ form.start_date(class_='form-control', type='date') }}
+        </div>
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-primary" type="submit" style="background-color:#1A5276;border-color:#1A5276;">Generate my 90-day roadmap</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="pathmap-card p-3 h-100">
+      <h6 class="mb-2">How this works</h6>
+      <ul class="small text-muted mb-0 ps-3">
+        <li>We map your gap skills to weekly learning blocks.</li>
+        <li>Networking and portfolio tasks scale to your hour budget.</li>
+        <li>Milestones at days 30, 60, and 90 keep you accountable.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const skills = document.getElementById('priority-skills');
+    const network = document.getElementById('priority-network');
+    const portfolio = document.getElementById('priority-portfolio');
+    const totalEl = document.getElementById('priority-total');
+
+    const updateTotal = () => {
+      const s = parseInt(skills.value || '0', 10);
+      const n = parseInt(network.value || '0', 10);
+      const p = parseInt(portfolio.value || '0', 10);
+      const total = s + n + p;
+      document.getElementById('priority-skills-value').textContent = s;
+      document.getElementById('priority-network-value').textContent = n;
+      document.getElementById('priority-portfolio-value').textContent = p;
+      totalEl.textContent = `Total: ${total}%`;
+      totalEl.className = `alert mt-3 mb-0 ${total === 100 ? 'alert-success' : 'alert-info'}`;
+    };
+
+    [skills, network, portfolio].forEach((el) => {
+      if (el) el.addEventListener('input', updateTotal);
+    });
+    updateTotal();
+
+    const form = document.getElementById('roadmap-form');
+    form?.addEventListener('submit', (e) => {
+      const total = parseInt(skills.value || '0', 10) + parseInt(network.value || '0', 10) + parseInt(portfolio.value || '0', 10);
+      if (total !== 100) {
+        e.preventDefault();
+        totalEl.className = 'alert alert-danger mt-3 mb-0';
+        totalEl.textContent = 'Total must equal 100%. Adjust the sliders before continuing.';
+      }
+    });
+  });
+</script>
+{% endblock %}

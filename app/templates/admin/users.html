@@ -1,0 +1,70 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Admin • Users{% endblock %}
+{% set page_title = 'Users' %}
+{% set page_tagline = 'Accounts, status, premium flags' %}
+{% block admin_header_actions %}
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-arrow-left"></i> Admin Home</a>
+    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.sessions_admin') }}"><i class="bi bi-camera-video"></i> Sessions</a>
+  </div>
+{% endblock %}
+{% block admin_content %}
+<div class="pathmap-card p-3 mb-3">
+  <div class="d-flex flex-wrap align-items-center gap-3">
+    <div class="badge bg-light text-dark">{{ users|length }} users loaded</div>
+    <div class="badge bg-success">{{ premium_count }} premium</div>
+    <div class="badge bg-secondary">{{ inactive_count }} inactive</div>
+  </div>
+</div>
+<div class="table-responsive">
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Created</th>
+        <th>Status</th>
+        <th>Subscription</th>
+        <th class="text-end">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>
+          <div class="fw-semibold">{{ user.email }}</div>
+          <div class="text-muted small">ID {{ user.id }}</div>
+        </td>
+        <td class="text-muted small">{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '—' }}</td>
+        <td>
+          {% if user.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+          {% if user.is_admin %}<span class="badge bg-dark">Admin</span>{% endif %}
+        </td>
+        <td>
+          {% if user.is_premium %}
+            <span class="badge bg-warning text-dark">Premium ({{ user.subscription_tier }})</span>
+          {% else %}
+            <span class="badge bg-light text-dark">Free</span>
+          {% endif %}
+        </td>
+        <td class="text-end">
+          <form method="post" action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}" class="d-inline">
+            {{ action_form.hidden_tag() }}
+            <button class="btn btn-sm btn-outline-secondary">{{ 'Deactivate' if user.is_active else 'Activate' }}</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.toggle_user_admin', user_id=user.id) }}" class="d-inline">
+            {{ action_form.hidden_tag() }}
+            <button class="btn btn-sm btn-outline-dark">{{ 'Remove Admin' if user.is_admin else 'Make Admin' }}</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.grant_premium', user_id=user.id) }}" class="d-inline">
+            {{ action_form.hidden_tag() }}
+            <button class="btn btn-sm btn-outline-primary">Grant Premium</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-muted text-center">No users found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}How It Works{% endblock %}
+{% block content %}
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <h1 class="fw-bold">How PathMap Works</h1>
+    <p class="text-muted">A structured, step-by-step process from decision paralysis to confident career pivot.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <h2 class="fw-bold mb-4">The 8-Stage Journey</h2>
+    <div class="row g-4">
+      {% set stages = [
+        {'title':'Discovery','icon':'bi-compass','desc':'Share your goals, constraints, and fears. We calibrate expectations and map where you are versus where you want to be.'},
+        {'title':'Registration','icon':'bi-person-plus','desc':'Create your account, set your income floor, timeline, and regions. These parameters shape feasibility.'},
+        {'title':'Assessment','icon':'bi-clipboard-data','desc':'Complete the 15-minute career clarity assessment covering values, work style, skills, and risk tolerance.'},
+        {'title':'Explore Targets','icon':'bi-search','desc':'See feasible target roles with probability scores based on your inputs and real journey benchmarks.'},
+        {'title':'Deep Analysis','icon':'bi-graph-up-arrow','desc':'Dive into role-level skill transfer maps, income change distributions, and timeline expectations.'},
+        {'title':'Decision Framework','icon':'bi-diagram-3','desc':'Compare shortlisted paths using weighted criteria (income, time, risk, satisfaction) to choose a direction.'},
+        {'title':'Roadmap','icon':'bi-calendar-check','desc':'Generate a 90-day roadmap with weekly milestones, curated resources, and stakeholder-proof updates.'},
+        {'title':'Progress Tracking','icon':'bi-check2-circle','desc':'Track execution, log wins and blockers, and adjust your roadmap based on progress data.'}
+      ] %}
+      {% for stage in stages %}
+      <div class="col-lg-3 col-md-4 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100">
+          <div class="d-flex align-items-center mb-2">
+            <span class="step-number-badge me-3">{{ '%02d' % loop.index }}</span>
+            <i class="bi {{ stage.icon }} fs-4 text-primary"></i>
+          </div>
+          <h6 class="fw-bold">{{ stage.title }}</h6>
+          <p class="text-muted mb-0">{{ stage.desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="py-5" id="feature-deep-dive">
+  <div class="container">
+    <h2 class="fw-bold mb-4">Feature Deep Dives</h2>
+    <div class="row g-4">
+      {% set features = [
+        {'name':'Career Clarity Assessment','what':'Maps values, constraints, and motivators into a pivot profile.','why':'Most pivots fail because they copy others, not themselves.','output':'A calibrated profile that powers feasibility scores.'},
+        {'name':'Skill Transfer Analyzer','what':'Quantifies overlap between your skills and target roles.','why':'People underestimate how much is transferable.','output':'Percentage transfer, gaps, and the shortest skill path.'},
+        {'name':'Journey Explorer','what':'Structured, anonymized pivots filtered by your starting point.','why':'Stories without structure mislead decisions.','output':'Timelines, income change, blockers, resources used.'},
+        {'name':'Feasibility Scoring','what':'Combines constraints, skills, and market data into a feasibility score.','why':'Confidence comes from evidence, not hype.','output':'Ranked target roles with rationale.'},
+        {'name':'Decision Framework','what':'Weighted criteria matrix to choose between options.','why':'Intuition needs structure to avoid regret.','output':'A documented decision you can defend to yourself and stakeholders.'},
+        {'name':'90-Day Roadmap','what':'Weekly milestones across skills, networking, and proof of work.','why':'Execution fails when plans are vague.','output':'A realistic, time-bounded plan with checkpoints.'},
+        {'name':'Progress Tracker','what':'Track completion, momentum, and blockers weekly.','why':'Momentum matters more than perfection.','output':'Visibility into pace and areas needing support.'},
+        {'name':'Shadow Sessions','what':'Access vetted professionals for targeted shadowing or Q&A.','why':'Contextual conversations beat generic mentorship.','output':'Session notes and action items linked to your roadmap.'},
+        {'name':'Resource Linker','what':'Curates courses, templates, and communities matched to your gaps.','why':'Too many resources create choice paralysis.','output':'Shortlist of high-signal resources mapped to milestones.'}
+      ] %}
+      {% for feature in features %}
+      <div class="col-lg-4 col-md-6 animate-on-scroll">
+        <div class="pathmap-card p-4 h-100">
+          <h5 class="fw-bold">{{ feature.name }}</h5>
+          <p class="mb-1"><strong>What it does:</strong> {{ feature.what }}</p>
+          <p class="mb-1"><strong>Why it exists:</strong> {{ feature.why }}</p>
+          <p class="mb-0"><strong>What it outputs:</strong> {{ feature.output }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="py-5 section-alt">
+  <div class="container">
+    <div class="row g-4 align-items-center">
+      <div class="col-md-7">
+        <h2 class="fw-bold mb-3">Free vs Premium</h2>
+        <p class="text-muted">The free tier is intentionally generous: assessment, limited analyses, and a taste of journeys. Premium unlocks unlimited analyses, the full journey database, decision framework exports, the complete 90-day roadmap, and shadow session marketplace.</p>
+        <p class="text-muted mb-0">We keep billing in INR via Razorpay. Cancel anytime. No hidden fees.</p>
+      </div>
+      <div class="col-md-5 text-md-end">
+        <a class="btn btn-pathmap-outline me-2" href="{{ url_for('main.pricing') }}">See Pricing</a>
+        <a class="btn btn-pathmap-primary" href="{{ url_for('auth.signup') }}">Start Free</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container text-center">
+    <div class="pathmap-card p-5">
+      <h3 class="fw-bold mb-2">Start your journey now</h3>
+      <p class="text-muted mb-4">Clarity, feasibility, and a roadmap — all in one platform.</p>
+      <a class="btn btn-pathmap-primary" href="{{ url_for('auth.signup') }}">Start My Free Assessment</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

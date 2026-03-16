@@ -1,0 +1,150 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('sessions.marketplace') }}">Shadow Sessions</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('sessions.provider_profile', provider_id=provider.id) }}">{{ provider.display_name }}</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">Book Session</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip secondary" href="{{ url_for('sessions.provider_profile', provider_id=provider.id) }}"><i class="bi bi-arrow-left"></i> Back to Profile</a>
+  <a class="cta-chip" href="{{ url_for('sessions.my_bookings') }}"><i class="bi bi-calendar-event"></i> My Bookings</a>
+  <a class="cta-chip" href="{{ url_for('planner.decision_framework') }}"><i class="bi bi-check2-all"></i> Decision Framework</a>
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="booking-summary-card card shadow-sm border-0 p-4 mb-3">
+      <h4 class="mb-3">Booking Summary</h4>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="provider-avatar-circle">{{ provider.display_name[0]|upper }}</div>
+        <div>
+          <div class="fw-bold">{{ provider.display_name }}</div>
+          <div class="text-muted"><i class="bi bi-briefcase me-1"></i>{{ provider.current_role.title }}</div>
+          <div class="small text-muted">{{ provider.rating_display }} · {{ provider.total_reviews }} reviews</div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <h6>Session details</h6>
+        <ul class="mb-0 text-muted">
+          <li>45-60 minute video call</li>
+          <li>{{ provider.session_format or 'Google Meet / Zoom link shared after booking' }}</li>
+          <li>{{ provider.session_description[:140] }}{% if provider.session_description|length > 140 %}…{% endif %}</li>
+        </ul>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <tbody>
+            <tr>
+              <td>Session fee</td>
+              <td class="text-end fw-semibold">₹{{ '{:,.0f}'.format(amount_inr) }}</td>
+            </tr>
+            <tr>
+              <td>PathMap platform fee (included)</td>
+              <td class="text-end text-muted">₹{{ '{:,.0f}'.format(commission_inr) }}</td>
+            </tr>
+            <tr class="table-light">
+              <td class="fw-bold">Total charged to you</td>
+              <td class="text-end fw-bold text-primary">₹{{ '{:,.0f}'.format(amount_inr) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3">
+        <h6>What happens after booking</h6>
+        <ol class="text-muted small mb-0">
+          <li>Payment confirmed → you receive a booking confirmation email</li>
+          <li>Provider shares meeting link via email (usually within 24 hours)</li>
+          <li>Attend your 45-60 minute session</li>
+          <li>Leave a review to help others</li>
+        </ol>
+      </div>
+      <div class="mt-3">
+        <label class="form-label">What would you like to discuss?</label>
+        <form id="booking-notes-form">
+          {{ form.hidden_tag() }}
+          {{ form.notes_from_booker(class='form-control', rows='3') }}
+        </form>
+      </div>
+      <div class="alert alert-secondary small mt-3">Payment is processed securely by Razorpay. PathMap does not store your card details.</div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="payment-card card shadow-sm border-0 p-4">
+      <h5 class="mb-1">Complete Payment</h5>
+      <div class="display-6 text-primary fw-bold">₹{{ '{:,.0f}'.format(amount_inr) }}</div>
+      <div class="text-muted small mb-3">UPI, Cards, Net Banking, Wallets</div>
+      <button id="pay-button" class="btn btn-primary w-100 mb-3">Pay ₹{{ '{:,.0f}'.format(amount_inr) }} Securely →</button>
+      <div id="payment-error" class="text-danger small d-none"></div>
+      <div class="text-muted small">Full refund available if session is not completed within 30 days of booking.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/marketplace.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const notesField = document.querySelector('[name="notes_from_booker"]');
+    const payBtn = document.getElementById('pay-button');
+    const errorBox = document.getElementById('payment-error');
+    function disablePay(disabled) { payBtn.disabled = disabled; payBtn.classList.toggle('disabled', disabled); }
+    payBtn.addEventListener('click', function(evt) {
+      evt.preventDefault();
+      disablePay(true);
+      errorBox.classList.add('d-none');
+      fetch("{{ url_for('sessions.create_booking_order', provider_id=provider.id) }}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ notes_from_booker: notesField.value })
+      }).then(resp => resp.json()).then(data => {
+        if (!data.success) { throw new Error(data.error || 'Unable to create order'); }
+        const options = {
+          key: data.key,
+          amount: data.amount,
+          currency: 'INR',
+          name: 'PathMap',
+          description: 'Shadow Session with {{ provider.display_name }}',
+          order_id: data.order_id,
+          handler: function (response) {
+            fetch("{{ url_for('sessions.verify_booking_payment', provider_id=provider.id) }}", {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                booking_id: data.booking_id
+              })
+            }).then(res => res.json()).then(resData => {
+              if (resData.success) {
+                window.location.href = resData.redirect_url;
+              } else {
+                throw new Error(resData.error || 'Verification failed');
+              }
+            }).catch(err => { errorBox.textContent = err.message; errorBox.classList.remove('d-none'); disablePay(false); });
+          },
+          prefill: { email: '{{ current_user.email }}', name: '{{ current_user.first_name or current_user.display_name }}' },
+          theme: { color: '#1A5276' },
+          modal: { ondismiss: function() { disablePay(false); errorBox.textContent = 'Payment cancelled. Your booking has not been confirmed.'; errorBox.classList.remove('d-none'); } }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+      }).catch(err => { errorBox.textContent = err.message; errorBox.classList.remove('d-none'); disablePay(false); });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends 'dashboard_base.html' %}
+{% block breadcrumb %}
+<nav class="breadcrumb-nav" aria-label="Breadcrumb">
+  <a class="breadcrumb-link" href="{{ url_for('dashboard.main_dashboard') }}">Dashboard</a>
+  <span class="breadcrumb-sep">/</span>
+  <a class="breadcrumb-link" href="{{ url_for('sessions.marketplace') }}">Shadow Sessions</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="text-muted">Provider Dashboard</span>
+</nav>
+{% endblock %}
+{% block breadcrumb_actions %}
+<div class="breadcrumb-actions">
+  <a class="cta-chip secondary" href="{{ url_for('sessions.marketplace') }}"><i class="bi bi-arrow-left"></i> Marketplace</a>
+  <a class="cta-chip" href="{{ url_for('sessions.my_bookings') }}"><i class="bi bi-calendar-event"></i> My Bookings</a>
+  <a class="cta-chip" href="{{ url_for('planner.roadmap_form') }}"><i class="bi bi-map"></i> 90-Day Roadmap</a>
+</div>
+{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h3 class="mb-1">Welcome, {{ provider.display_name }}</h3>
+    <div class="text-muted">Manage your shadow sessions, payouts, and reviews.</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('sessions.edit_provider_profile') }}">Edit Profile</a>
+    <a class="btn btn-primary" href="{{ url_for('sessions.provider_profile', provider_id=provider.id) }}">View Public Profile</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 p-3">
+      <div class="text-muted small">Total earned</div>
+      <div class="h5">₹{{ '{:,.0f}'.format(earnings_stats.total_earned) }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 p-3">
+      <div class="text-muted small">Sessions completed</div>
+      <div class="h5">{{ provider.total_sessions }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 p-3">
+      <div class="text-muted small">Avg rating</div>
+      <div class="h5">{{ provider.rating_display }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 p-3">
+      <div class="text-muted small">This month's earnings</div>
+      <div class="h5">₹{{ '{:,.0f}'.format(earnings_stats.this_month_earnings) }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 p-3 mb-4">
+  <h5 class="mb-3">Recent bookings</h5>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Booker</th><th>Date</th><th>Amount</th><th>Status</th><th>Schedule</th></tr></thead>
+      <tbody>
+        {% for booking in bookings %}
+        <tr>
+          <td>PathMap member</td>
+          <td>{{ booking.booked_at.strftime('%b %d, %Y') }}</td>
+          <td>₹{{ '{:,.0f}'.format(booking.provider_payout_inr) }}</td>
+          <td><span class="badge bg-light text-dark">{{ booking.status_display }}</span></td>
+          <td style="min-width: 260px;">
+            <div class="small text-muted">{% if booking.session_scheduled_at %}Scheduled for {{ booking.session_scheduled_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}Not scheduled yet{% endif %}</div>
+            {% if booking.session_link %}
+              <div><a href="{{ booking.session_link }}" target="_blank" rel="noopener">Join link</a></div>
+            {% endif %}
+            {% if booking.status in ['paid', 'session_scheduled'] %}
+            <div class="input-group input-group-sm mt-2">
+              <input type="datetime-local" class="form-control" data-schedule-input="{{ booking.id }}" value="{{ booking.session_scheduled_at.strftime('%Y-%m-%dT%H:%M') if booking.session_scheduled_at else '' }}">
+            </div>
+            <div class="input-group input-group-sm mt-1">
+              <input type="url" class="form-control" placeholder="Join link" data-link-input="{{ booking.id }}" value="{{ booking.session_link or '' }}">
+              <button class="btn btn-primary" type="button" data-send-schedule="{{ booking.id }}">Send</button>
+            </div>
+            <div class="small text-muted mt-1" data-schedule-status="{{ booking.id }}"></div>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted">No bookings yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 p-3">
+  <h5 class="mb-3">Latest reviews</h5>
+  {% if reviews %}
+    {% for review in reviews %}
+    <div class="border rounded-3 p-3 mb-2">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        {% for i in range(1,6) %}
+          {% if review.rating >= i %}<i class="bi bi-star-fill star-filled"></i>{% else %}<i class="bi bi-star star-empty"></i>{% endif %}
+        {% endfor %}
+        <span class="small text-muted">{{ review.created_at.strftime('%b %d, %Y') }}</span>
+      </div>
+      <div class="mb-1">{{ review.review_text }}</div>
+      <div class="small text-muted">Would recommend: {{ 'Yes' if review.would_recommend else 'No' }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted mb-0">No reviews yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    document.querySelectorAll('[data-send-schedule]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        const bookingId = this.getAttribute('data-send-schedule');
+        const scheduledAt = document.querySelector(`[data-schedule-input="${bookingId}"]`)?.value;
+        const sessionLink = document.querySelector(`[data-link-input="${bookingId}"]`)?.value;
+        const statusEl = document.querySelector(`[data-schedule-status="${bookingId}"]`);
+
+        if (!scheduledAt || !sessionLink) {
+          if (statusEl) {
+            statusEl.textContent = 'Add time and link before sending.';
+            statusEl.classList.remove('text-success');
+            statusEl.classList.add('text-danger');
+          }
+          return;
+        }
+
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
+
+        fetch(`{{ url_for('sessions.schedule_session', booking_id=0) }}`.replace('0', bookingId), {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ scheduled_at: scheduledAt, session_link: sessionLink })
+        }).then(resp => resp.json()).then(data => {
+          if (data.success) {
+            if (statusEl) {
+              statusEl.textContent = 'Schedule sent to attendee.';
+              statusEl.classList.remove('text-danger');
+              statusEl.classList.add('text-success');
+            }
+            setTimeout(() => window.location.reload(), 600);
+          } else {
+            if (statusEl) {
+              statusEl.textContent = data.error || 'Could not schedule.';
+              statusEl.classList.remove('text-success');
+              statusEl.classList.add('text-danger');
+            }
+          }
+        }).catch(() => {
+          if (statusEl) {
+            statusEl.textContent = 'Could not schedule.';
+            statusEl.classList.remove('text-success');
+            statusEl.classList.add('text-danger');
+          }
+        });
+      });
+    });
+  });
+</script>
+{% endblock %}
